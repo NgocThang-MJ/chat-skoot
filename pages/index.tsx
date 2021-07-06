@@ -4,12 +4,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import { io } from "socket.io-client";
 import { signIn, useSession } from "next-auth/client";
-import {
-  FaGithub,
-  FaDiscord,
-  FaFacebook,
-  FaFacebookSquare,
-} from "react-icons/fa";
+import { FaGithub, FaDiscord, FaFacebookSquare } from "react-icons/fa";
 
 import { connectToDatabase } from "../util/mongodb.js";
 
@@ -28,92 +23,96 @@ export default function Home() {
     }
   }, [session]);
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  // if (loading) {
+  //   return <p>Loading...</p>;
+  // }
 
   return (
     <div>
       <Head>
         <title>Chat Skoot</title>
       </Head>
-      <div className="max-w-screen-2xl w-11/12 mx-auto flex flex-row justify-between items-start h-full mt-14">
-        <div>
-          <p className="text-5xl text-red-500">Chat Skoot</p>
-          <p className="mt-2">
-            Free message, voice call and video call, connect all people over the
-            world!
-          </p>
-          <div
-            onClick={() => {
-              signIn("google", {
-                callbackUrl: redirect_url,
-              });
-            }}
-            className="bg-blue-500 border border-blue-500 mt-6 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
-          >
-            <div className="bg-white w-10 h-10 flex justify-center items-center rounded">
-              <Image src="/google.png" width={20} height={20} alt="Google" />
+      {!session && !loading ? (
+        <div className="max-w-screen-2xl w-11/12 mx-auto flex flex-row justify-between items-start h-full mt-14">
+          <div>
+            <p className="text-5xl text-red-500">Chat Skoot</p>
+            <p className="mt-2">
+              Free message, voice call and video call, connect all people over
+              the world!
+            </p>
+            <div
+              onClick={() => {
+                signIn("google", {
+                  callbackUrl: redirect_url,
+                });
+              }}
+              className="bg-blue-500 border border-blue-500 mt-6 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
+            >
+              <div className="bg-white w-10 h-10 flex justify-center items-center rounded">
+                <Image src="/google.png" width={20} height={20} alt="Google" />
+              </div>
+              <div className="mx-auto">
+                <p className="mx-4 font-bold">Continue with Google</p>
+              </div>
             </div>
-            <div className="mx-auto">
-              <p className="mx-4 font-bold">Continue with Google</p>
+            <div
+              onClick={() => {
+                signIn("facebook", {
+                  callbackUrl: redirect_url,
+                });
+              }}
+              className="bg-facebook border border-blue-500 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
+            >
+              <div className="w-10 h-10 flex justify-center items-center rounded">
+                <FaFacebookSquare className="w-8 h-8" />
+              </div>
+              <div className="mx-auto">
+                <p className="mx-4 font-bold">Continue with Facebook</p>
+              </div>
+            </div>
+            <div
+              onClick={() => {
+                signIn("github", {
+                  callbackUrl: redirect_url,
+                });
+              }}
+              className="bg-gray-900 border border-gray-900 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
+            >
+              <div className="w-10 h-10 flex justify-center items-center rounded">
+                <FaGithub className="w-7 h-7" />
+              </div>
+              <div className="mx-auto">
+                <p className="mx-4 font-bold">Continue with Github</p>
+              </div>
+            </div>
+            <div
+              onClick={() => {
+                signIn("discord", {
+                  callbackUrl: redirect_url,
+                });
+              }}
+              className="bg-indigo-700 border border-indigo-700 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
+            >
+              <div className="w-10 h-10 flex justify-center items-center rounded">
+                <FaDiscord className="w-7 h-7" />
+              </div>
+              <div className="mx-auto">
+                <p className="mx-4 font-bold">Continue with Discord</p>
+              </div>
             </div>
           </div>
-          <div
-            onClick={() => {
-              signIn("facebook", {
-                callbackUrl: redirect_url,
-              });
-            }}
-            className="bg-facebook border border-blue-500 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
-          >
-            <div className="w-10 h-10 flex justify-center items-center rounded">
-              <FaFacebookSquare className="w-8 h-8" />
-            </div>
-            <div className="mx-auto">
-              <p className="mx-4 font-bold">Continue with Facebook</p>
-            </div>
-          </div>
-          <div
-            onClick={() => {
-              signIn("github", {
-                callbackUrl: redirect_url,
-              });
-            }}
-            className="bg-gray-900 border border-gray-900 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
-          >
-            <div className="w-10 h-10 flex justify-center items-center rounded">
-              <FaGithub className="w-7 h-7" />
-            </div>
-            <div className="mx-auto">
-              <p className="mx-4 font-bold">Continue with Github</p>
-            </div>
-          </div>
-          <div
-            onClick={() => {
-              signIn("discord", {
-                callbackUrl: redirect_url,
-              });
-            }}
-            className="bg-indigo-700 border border-indigo-700 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
-          >
-            <div className="w-10 h-10 flex justify-center items-center rounded">
-              <FaDiscord className="w-7 h-7" />
-            </div>
-            <div className="mx-auto">
-              <p className="mx-4 font-bold">Continue with Discord</p>
-            </div>
+          <div>
+            <img
+              src="/landing.svg"
+              alt="Landing Image"
+              width={580}
+              height={360}
+            />
           </div>
         </div>
-        <div>
-          <img
-            src="/landing.svg"
-            alt="Landing Image"
-            width={580}
-            height={360}
-          />
-        </div>
-      </div>
+      ) : (
+        <div>Loading...</div>
+      )}
     </div>
   );
 }
