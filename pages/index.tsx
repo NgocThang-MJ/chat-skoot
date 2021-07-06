@@ -54,7 +54,7 @@ export default function Home(props: { redirect_url: string }) {
                 callbackUrl: redirect_url,
               });
             }}
-            className="bg-blue-500 border border-blue-500 mt-6 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
+            className="bg-blue-500 border border-blue-500 mt-6 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
           >
             <div className="bg-white w-10 h-10 flex justify-center items-center rounded">
               <Image src="/google.png" width={20} height={20} alt="Google" />
@@ -69,7 +69,7 @@ export default function Home(props: { redirect_url: string }) {
                 callbackUrl: redirect_url,
               });
             }}
-            className="bg-facebook border border-blue-500 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
+            className="bg-facebook border border-blue-500 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
           >
             <div className="w-10 h-10 flex justify-center items-center rounded">
               <FaFacebookSquare className="w-8 h-8" />
@@ -84,7 +84,7 @@ export default function Home(props: { redirect_url: string }) {
                 callbackUrl: redirect_url,
               });
             }}
-            className="bg-gray-900 border border-gray-900 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
+            className="bg-gray-900 border border-gray-900 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
           >
             <div className="w-10 h-10 flex justify-center items-center rounded">
               <FaGithub className="w-7 h-7" />
@@ -99,7 +99,7 @@ export default function Home(props: { redirect_url: string }) {
                 callbackUrl: redirect_url,
               });
             }}
-            className="bg-indigo-700 border border-indigo-700 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
+            className="bg-indigo-700 border border-indigo-700 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
           >
             <div className="w-10 h-10 flex justify-center items-center rounded">
               <FaDiscord className="w-7 h-7" />
