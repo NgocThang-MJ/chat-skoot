@@ -4,7 +4,12 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import { io } from "socket.io-client";
 import { signIn, useSession } from "next-auth/client";
-import { FaGithub, FaDiscord } from "react-icons/fa";
+import {
+  FaGithub,
+  FaDiscord,
+  FaFacebook,
+  FaFacebookSquare,
+} from "react-icons/fa";
 
 import { connectToDatabase } from "../util/mongodb.js";
 
@@ -67,13 +72,7 @@ export default function Home(props: { redirect_url: string }) {
             className="bg-facebook border border-blue-500 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
           >
             <div className="w-10 h-10 flex justify-center items-center rounded">
-              <Image
-                src="/facebook.png"
-                width={30}
-                height={30}
-                alt="Facebook"
-                className="text-white"
-              />
+              <FaFacebookSquare className="w-8 h-8" />
             </div>
             <div className="mx-auto">
               <p className="mx-4 font-bold">Continue with Facebook</p>
@@ -85,7 +84,7 @@ export default function Home(props: { redirect_url: string }) {
                 callbackUrl: redirect_url,
               });
             }}
-            className="bg-black border border-black mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
+            className="bg-gray-900 border border-gray-900 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-1/2"
           >
             <div className="w-10 h-10 flex justify-center items-center rounded">
               <FaGithub className="w-7 h-7" />
