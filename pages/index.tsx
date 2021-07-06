@@ -22,7 +22,7 @@ export default function Home(props: { redirect_url: string }) {
   //   console.log(socket.id, "id socket");
   // });
 
-  console.log(props.redirect_url);
+  console.log(redirect_url);
 
   useEffect(() => {
     if (session) {
