@@ -8,14 +8,16 @@ import { FaGithub, FaDiscord } from "react-icons/fa";
 
 import { connectToDatabase } from "../util/mongodb.js";
 
-export default function Home() {
+export default function Home(props: { redirect_url: string }) {
   const [session, loading] = useSession();
   const router = useRouter();
   const socket = io("http://localhost:5000");
-  const redirect_url = "http://localhost:3000/message";
+  const redirect_url = props.redirect_url;
   // socket.on("connect", () => {
   //   console.log(socket.id, "id socket");
   // });
+
+  console.log(props.redirect_url);
 
   useEffect(() => {
     if (session) {
@@ -121,12 +123,10 @@ export default function Home() {
   );
 }
 
-// export async function getStaticProps() {
-//   const { db } = await connectToDatabase();
-//   const movies = await db.collection("movies").find({}).limit(20).toArray();
-//   console.log("db connected");
+export async function getServerSideProps() {
+  const redirect_url = process.env.REDIRECT_URL;
 
-//   return {
-//     props: { movies: JSON.parse(JSON.stringify(movies)) },
-//   };
-// }
+  return {
+    props: { redirect_url },
+  };
+}
