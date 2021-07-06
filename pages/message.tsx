@@ -6,17 +6,18 @@ import { signOut, useSession } from "next-auth/client";
 
 import { connectToDatabase } from "../util/mongodb.js";
 
-export default function Home() {
+console.log(process.env);
+
+export default function Home(props: { server_url: string }) {
   const router = useRouter();
   const [session, loading] = useSession();
-  const socket = io("http://localhost:5000");
+  const socket = io(props.server_url);
 
   socket.on("connect", () => {
     console.log(socket.id, "id socket");
   });
 
   useEffect(() => {
-    console.log(session);
     if (!(session || loading)) {
       router.push("/");
     }
@@ -61,3 +62,10 @@ export default function Home() {
 //     props: { movies: JSON.parse(JSON.stringify(movies)) },
 //   };
 // }
+export async function getServerSideProps() {
+  const server_url = process.env.SERVER_URL;
+
+  return {
+    props: { server_url },
+  };
+}
