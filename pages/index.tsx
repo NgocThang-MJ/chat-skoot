@@ -13,16 +13,14 @@ import {
 
 import { connectToDatabase } from "../util/mongodb.js";
 
-export default function Home(props: { redirect_url: string }) {
+export default function Home() {
   const [session, loading] = useSession();
   const router = useRouter();
+  const redirect_url = `${process.env.NEXT_PUBLIC_REDIRECT_URL}`;
   // const socket = io("http://localhost:5000");
-  const redirect_url = props.redirect_url;
   // socket.on("connect", () => {
   //   console.log(socket.id, "id socket");
   // });
-
-  console.log(redirect_url);
 
   useEffect(() => {
     if (session) {
@@ -120,12 +118,4 @@ export default function Home(props: { redirect_url: string }) {
       </div>
     </div>
   );
-}
-
-export async function getServerSideProps() {
-  const redirect_url = process.env.REDIRECT_URL;
-
-  return {
-    props: { redirect_url },
-  };
 }
