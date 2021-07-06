@@ -11,13 +11,13 @@ import { connectToDatabase } from "../util/mongodb.js";
 export default function Home(props: { redirect_url: string }) {
   const [session, loading] = useSession();
   const router = useRouter();
-  const socket = io("http://localhost:5000");
+  // const socket = io("http://localhost:5000");
   const redirect_url = props.redirect_url;
   // socket.on("connect", () => {
   //   console.log(socket.id, "id socket");
   // });
 
-  console.log(props.redirect_url);
+  console.log(redirect_url);
 
   useEffect(() => {
     if (session) {
