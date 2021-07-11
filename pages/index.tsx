@@ -36,7 +36,7 @@ export default function Home() {
         <div className="max-w-screen-2xl w-11/12 mx-auto flex flex-row justify-between items-start h-full mt-14">
           <div>
             <p className="text-5xl text-red-500">Chat Skoot</p>
-            <p className="mt-2">
+            <p className="mt-2 text-gray-200">
               Free message, voice call and video call, connect all people over
               the world!
             </p>
