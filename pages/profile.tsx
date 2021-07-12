@@ -30,7 +30,7 @@ export default function Profile() {
           userId: session.userId,
         }
       );
-      console.log(response.data);
+      setUsername(response.data.newUsername);
       setSaveBtnText("Save");
     } catch (err) {
       console.log(err);
@@ -68,7 +68,6 @@ export default function Profile() {
 
   const onChangeUsername = (e: FormEvent<HTMLInputElement>) => {
     setUsername(e.currentTarget.value);
-    console.log(e.currentTarget.value);
   };
 
   const onChangeFile = (e: FormEvent<HTMLInputElement>) => {
