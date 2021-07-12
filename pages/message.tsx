@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef, MouseEvent } from "react";
 import { io } from "socket.io-client";
-import { signOut, getSession } from "next-auth/client";
+import { signOut, getSession, useSession } from "next-auth/client";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { IoMdSend, IoMdMenu, IoMdNotifications } from "react-icons/io";
@@ -12,6 +12,7 @@ import { FiLogOut } from "react-icons/fi";
 
 export default function Home() {
   const router = useRouter();
+  const [session, loadingSession] = useSession();
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState({
     username: "",
@@ -32,8 +33,13 @@ export default function Home() {
   const logout = () => {
     setLoading(true);
     signOut({ redirect: false, callbackUrl: "/" });
-    router.push("/");
   };
+
+  useEffect(() => {
+    if (!session && !loadingSession) {
+      router.push("/");
+    }
+  }, [session, loadingSession]);
 
   useEffect(() => {
     console.log("re-run");
