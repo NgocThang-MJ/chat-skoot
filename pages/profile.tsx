@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { useSession } from "next-auth/client";
+import { getSession } from "next-auth/client";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, MouseEvent, FormEvent } from "react";
@@ -8,29 +8,37 @@ import axios from "axios";
 import { IoMdArrowBack } from "react-icons/io";
 
 export default function Profile() {
-  const [session, loading] = useSession();
-  const router = useRouter();
-  const [imgUrl, setImgUrl] = useState(`${process.env.NEXT_PUBLIC_USER_IMG}`);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState({
+    username: "",
+    imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    email: "",
+    userId: "",
+    imgName: "",
+  });
+  const [inputUsername, setInputUsername] = useState("");
   const [image, setImage] = useState<File>();
   const [notification, setNotification] = useState("");
-  const [username, setUsername] = useState("");
   const [saveBtnText, setSaveBtnText] = useState("Save");
+  const router = useRouter();
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const changeUsername = async (e: MouseEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
-      if (!session?.user) return;
-      if (session?.user.name === username) return;
+      if (!inputUsername) return;
       setSaveBtnText("Saving...");
       const response = await axios.post(
         `${server_url}/api/users/change-user-name`,
         {
-          newUsername: username,
-          userId: session.userId,
+          newUsername: inputUsername,
+          userId: userProfile.userId,
         }
       );
-      setUsername(response.data.newUsername);
+      setUserProfile({
+        ...userProfile,
+        username: response.data.newUsername,
+      });
       setSaveBtnText("Save");
     } catch (err) {
       console.log(err);
@@ -50,10 +58,13 @@ export default function Profile() {
           const res = await axios.post(`${server_url}/api/users/upload`, {
             data: reader.result,
             name: image.name,
-            userId: session?.userId,
-            img_name: session?.img_name,
+            userId: userProfile.userId,
+            imgName: userProfile.imgName,
           });
-          setImgUrl(res.data.url);
+          setUserProfile({
+            ...userProfile,
+            imgUrl: res.data.url,
+          });
           setImage(undefined);
           setNotification("");
         } catch (err) {
@@ -67,7 +78,7 @@ export default function Profile() {
   };
 
   const onChangeUsername = (e: FormEvent<HTMLInputElement>) => {
-    setUsername(e.currentTarget.value);
+    setInputUsername(e.currentTarget.value);
   };
 
   const onChangeFile = (e: FormEvent<HTMLInputElement>) => {
@@ -78,21 +89,35 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    if (!session && !loading) {
-      router.push("/");
-    }
-    if (session) {
-      setImgUrl(session.user?.image!);
-      setUsername(session.user?.name!);
-    }
-  }, [session, loading]);
+    console.log("re-run");
+    const getProfile = async () => {
+      const profile = await getSession();
+      return profile;
+    };
+    getProfile()
+      .then((profile) => {
+        setLoading(false);
+        setInputUsername(profile?.user?.name!);
+        setUserProfile({
+          ...userProfile,
+          username: profile?.user?.name!,
+          email: profile?.user?.email || "",
+          userId: profile?.userId as string,
+          imgName: profile?.img_name as string,
+          imgUrl: profile?.user?.image!,
+        });
+      })
+      .catch(() => {
+        router.push("/");
+      });
+  }, []);
 
   return (
     <div className="w-2/3 pt-8 mx-auto">
       <Head>
         <title>Profile</title>
       </Head>
-      {session ? (
+      {!loading ? (
         <div>
           <Link href="/message">
             <a>
@@ -104,7 +129,7 @@ export default function Profile() {
           <div className="flex mb-5">
             <div className="mr-10">
               <Image
-                src={imgUrl}
+                src={userProfile.imgUrl}
                 width={160}
                 height={160}
                 objectFit="contain"
@@ -115,11 +140,11 @@ export default function Profile() {
               <form onSubmit={changeUsername} className="flex items-center">
                 <input
                   type="text"
-                  value={username}
+                  value={inputUsername}
                   onChange={onChangeUsername}
                   className="text-white text-2xl bg-white bg-opacity-0 outline-none"
                 />
-                {username !== session.user?.name && (
+                {userProfile.username !== inputUsername && (
                   <button
                     type="submit"
                     className="ml-4 text-white bg-red-500 px-2 py-1 rounded"
@@ -128,7 +153,7 @@ export default function Profile() {
                   </button>
                 )}
               </form>
-              <p className="text-gray-400">{session.user?.email}</p>
+              <p className="text-gray-400">{userProfile.email}</p>
             </div>
           </div>
 
