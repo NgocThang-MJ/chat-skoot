@@ -55,7 +55,7 @@ export default function Home() {
 
   return (
     <>
-      {session && !loading ? (
+      {!loading ? (
         <div className="h-screen">
           <Head>
             <title>Chat Skoot</title>
