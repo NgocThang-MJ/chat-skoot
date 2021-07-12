@@ -160,7 +160,7 @@ export default function Home() {
 
                         <div
                           onClick={() => {
-                            signOut({ redirect: false });
+                            signOut({ redirect: false, callbackUrl: "/" });
                           }}
                           className="text-gray-400 m-3 flex items-center cursor-pointer hover:bg-gray-700 rounded-md p-2 transition"
                         >
