@@ -14,12 +14,28 @@ export default function Profile() {
   const [image, setImage] = useState<File>();
   const [notification, setNotification] = useState("");
   const [username, setUsername] = useState("");
+  const [saveBtnText, setSaveBtnText] = useState("Save");
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
-  const changeUsername = (e: MouseEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!session?.user) return;
-    if (session?.user.name === username) return;
+  const changeUsername = async (e: MouseEvent<HTMLFormElement>) => {
+    try {
+      e.preventDefault();
+      if (!session?.user) return;
+      if (session?.user.name === username) return;
+      setSaveBtnText("Saving...");
+      const response = await axios.post(
+        `${server_url}/api/users/change-user-name`,
+        {
+          newUsername: username,
+          userId: session.userId,
+        }
+      );
+      console.log(response.data);
+      setSaveBtnText("Save");
+    } catch (err) {
+      console.log(err);
+      setSaveBtnText("Save");
+    }
   };
 
   const changeAvt = (e: MouseEvent<HTMLFormElement>) => {
@@ -109,7 +125,7 @@ export default function Profile() {
                     type="submit"
                     className="ml-4 text-white bg-red-500 px-2 py-1 rounded"
                   >
-                    Save
+                    {saveBtnText}
                   </button>
                 )}
               </form>
