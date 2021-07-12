@@ -10,13 +10,18 @@ import { IoMdArrowBack } from "react-icons/io";
 export default function Profile() {
   const [session, loading] = useSession();
   const router = useRouter();
+  const [imgUrl, setImgUrl] = useState(`${process.env.NEXT_PUBLIC_USER_IMG}`);
   const [image, setImage] = useState<File>();
+  const [notification, setNotification] = useState("");
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const onSubmit = (e: MouseEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      if (!image) return;
+      if (!image) {
+        setNotification("No file selected");
+        return;
+      }
       console.log(image);
       const reader = new FileReader();
       reader.readAsDataURL(image);
@@ -25,7 +30,11 @@ export default function Profile() {
           data: reader.result,
           name: image.name,
           userId: session?.userId,
+          img_name: session?.img_name,
         });
+        setImgUrl(res.data.url);
+        setImage(undefined);
+        setNotification("");
         console.log(res.data);
       };
     } catch (err) {
@@ -34,15 +43,19 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    console.log(session);
     if (!session && !loading) {
       router.push("/");
+    }
+    if (session) {
+      console.log(session, "session");
+      setImgUrl(session.user?.image!);
     }
   }, [session, loading]);
 
   const onChangeFile = (e: FormEvent<HTMLInputElement>) => {
     if (e.currentTarget.files) {
       setImage(e.currentTarget.files[0]);
+      setNotification(e.currentTarget.files[0].name);
     }
   };
 
@@ -63,7 +76,7 @@ export default function Profile() {
           <div className="flex mb-5">
             <div className="mr-10">
               <Image
-                src={session.user?.image!}
+                src={imgUrl}
                 width={160}
                 height={160}
                 objectFit="contain"
@@ -91,9 +104,12 @@ export default function Profile() {
                 accept="image/*"
                 onChange={onChangeFile}
               />
+              {notification && (
+                <p className="text-white mt-3">{notification}</p>
+              )}
               <button
                 type="submit"
-                className="bg-pink-500 px-2 py-1 rounded block mt-5"
+                className="bg-red-500 text-white px-2 py-1 rounded block mt-3"
               >
                 Upload
               </button>
