@@ -32,6 +32,7 @@ export default function Home() {
   const logout = () => {
     setLoading(true);
     signOut({ redirect: false, callbackUrl: "/" });
+    router.push("/");
   };
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function Home() {
     };
     getProfile()
       .then((profile) => {
+        if (!profile) return router.push("/");
         setLoading(false);
         setUserProfile({
           ...userProfile,

@@ -96,6 +96,7 @@ export default function Profile() {
     };
     getProfile()
       .then((profile) => {
+        if (!profile) return router.push("/");
         setLoading(false);
         setInputUsername(profile?.user?.name!);
         setUserProfile({

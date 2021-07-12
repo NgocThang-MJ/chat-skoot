@@ -6,8 +6,6 @@ import { io } from "socket.io-client";
 import { signIn, useSession } from "next-auth/client";
 import { FaGithub, FaDiscord, FaFacebookSquare } from "react-icons/fa";
 
-import { connectToDatabase } from "../util/mongodb.js";
-
 export default function Home() {
   const [session, loading] = useSession();
   const router = useRouter();
