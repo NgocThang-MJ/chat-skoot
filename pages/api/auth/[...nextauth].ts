@@ -22,15 +22,8 @@ export default NextAuth({
       clientSecret: process.env.DISCORD_SECRET,
     }),
   ],
-  // session: {
-  //   jwt: true,
-  //   maxAge: 60 * 60,
-  // },
   callbacks: {
     async session(session, token) {
-      // console.log(session);
-      // console.log(user);
-      // console.log(JSON.parse(JSON.stringify(user)));
       const userId = JSON.parse(JSON.stringify(token)).id;
       const { db } = await connectToDatabase();
       const user = await db
@@ -40,24 +33,6 @@ export default NextAuth({
       session.userId = userId;
       return session;
     },
-    // async jwt(token, user, account, profile, isNewUser) {
-    //   console.log(token, "token");
-    //   console.log(user, "user");
-    //   console.log(account, "acc");
-    //   console.log(profile, "profile");
-    //   console.log(isNewUser, "is");
-    //   // token.user = user;
-    //   // token.profile = profile;
-    //   // token.abc = "abc";
-    //   return Promise.resolve(token);
-    // },
-    //   async signIn(user, account, profile) {
-    //     console.log(user, "user");
-    //     console.log(account, "account");
-    //     console.log(profile, "profile");
-    //     // const { db } = await connectToDatabase();
-    //     return true;
-    //   },
   },
   database: process.env.DB_URL,
 });

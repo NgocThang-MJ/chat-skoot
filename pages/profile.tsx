@@ -13,32 +13,52 @@ export default function Profile() {
   const [imgUrl, setImgUrl] = useState(`${process.env.NEXT_PUBLIC_USER_IMG}`);
   const [image, setImage] = useState<File>();
   const [notification, setNotification] = useState("");
+  const [username, setUsername] = useState("");
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
-  const onSubmit = (e: MouseEvent<HTMLFormElement>) => {
+  const changeUsername = (e: MouseEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!session?.user) return;
+    if (session?.user.name === username) return;
+  };
+
+  const changeAvt = (e: MouseEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      if (!image) {
-        setNotification("No file selected");
-        return;
-      }
-      console.log(image);
+      if (!image) return;
       const reader = new FileReader();
       reader.readAsDataURL(image);
       reader.onloadend = async () => {
-        const res = await axios.post(`${server_url}/api/upload`, {
-          data: reader.result,
-          name: image.name,
-          userId: session?.userId,
-          img_name: session?.img_name,
-        });
-        setImgUrl(res.data.url);
-        setImage(undefined);
-        setNotification("");
-        console.log(res.data);
+        try {
+          setNotification("Uploading...");
+          const res = await axios.post(`${server_url}/api/users/upload`, {
+            data: reader.result,
+            name: image.name,
+            userId: session?.userId,
+            img_name: session?.img_name,
+          });
+          setImgUrl(res.data.url);
+          setImage(undefined);
+          setNotification("");
+        } catch (err) {
+          console.log(err);
+          setNotification("Can't upload this image");
+        }
       };
     } catch (err) {
       console.log(err, "Error client");
+    }
+  };
+
+  const onChangeUsername = (e: FormEvent<HTMLInputElement>) => {
+    setUsername(e.currentTarget.value);
+    console.log(e.currentTarget.value);
+  };
+
+  const onChangeFile = (e: FormEvent<HTMLInputElement>) => {
+    if (e.currentTarget.files) {
+      setImage(e.currentTarget.files[0]);
+      setNotification(e.currentTarget.files[0].name);
     }
   };
 
@@ -47,17 +67,10 @@ export default function Profile() {
       router.push("/");
     }
     if (session) {
-      console.log(session, "session");
       setImgUrl(session.user?.image!);
+      setUsername(session.user?.name!);
     }
   }, [session, loading]);
-
-  const onChangeFile = (e: FormEvent<HTMLInputElement>) => {
-    if (e.currentTarget.files) {
-      setImage(e.currentTarget.files[0]);
-      setNotification(e.currentTarget.files[0].name);
-    }
-  };
 
   return (
     <div className="w-2/3 pt-8 mx-auto">
@@ -83,14 +96,29 @@ export default function Profile() {
                 className="rounded-full"
               />
             </div>
-            <div className="mt-10">
-              <p className="text-white text-2xl mb-1">{session.user?.name}</p>
+            <div className="mt-8">
+              <form onSubmit={changeUsername} className="flex items-center">
+                <input
+                  type="text"
+                  value={username}
+                  onChange={onChangeUsername}
+                  className="text-white text-2xl bg-white bg-opacity-0 outline-none"
+                />
+                {username !== session.user?.name && (
+                  <button
+                    type="submit"
+                    className="ml-4 text-white bg-red-500 px-2 py-1 rounded"
+                  >
+                    Save
+                  </button>
+                )}
+              </form>
               <p className="text-gray-400">{session.user?.email}</p>
             </div>
           </div>
 
           <div>
-            <form onSubmit={onSubmit}>
+            <form onSubmit={changeAvt}>
               <label
                 htmlFor="file"
                 className="p-2 bg-green-500 text-white rounded cursor-pointer"
@@ -109,7 +137,9 @@ export default function Profile() {
               )}
               <button
                 type="submit"
-                className="bg-red-500 text-white px-2 py-1 rounded block mt-3"
+                className={`${
+                  image ? "bg-red-500" : "bg-gray-500 cursor-default"
+                } text-white px-2 py-1 rounded block mt-3`}
               >
                 Upload
               </button>
