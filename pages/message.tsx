@@ -9,13 +9,11 @@ import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { IoMdSend, IoMdMenu, IoMdNotifications } from "react-icons/io";
 import { FiLogOut } from "react-icons/fi";
-import { useDetectClickOutside } from "react-detect-click-outside";
-
-import { connectToDatabase } from "../util/mongodb.js";
 
 export default function Home() {
   const router = useRouter();
-  const [session, loading] = useSession();
+  const [session, loadingSession] = useSession();
+  const [loading, setLoading] = useState(true);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const socket = io(`${server_url}`);
   const [input, setInput] = useState<String>("");
@@ -28,11 +26,18 @@ export default function Home() {
   const toggleMenu = () => {
     setMenu(!menu);
   };
+  const logout = () => {
+    setLoading(true);
+    signOut({ redirect: false, callbackUrl: "/" });
+  };
   useEffect(() => {
-    if (!(session || loading)) {
+    if (!(session || loadingSession)) {
       router.push("/");
     }
-  }, [session, loading]);
+    if (session) {
+      setLoading(false);
+    }
+  }, [session, loadingSession]);
 
   // Event click outside
   useEffect(() => {
@@ -159,9 +164,7 @@ export default function Home() {
                         </Link>
 
                         <div
-                          onClick={() => {
-                            signOut({ redirect: false, callbackUrl: "/" });
-                          }}
+                          onClick={logout}
                           className="text-gray-400 m-3 flex items-center cursor-pointer hover:bg-gray-700 rounded-md p-2 transition"
                         >
                           <FiLogOut className="h-5 w-5 mr-3" />
@@ -176,7 +179,7 @@ export default function Home() {
           ) : null}
         </div>
       ) : (
-        <p>Loading...</p>
+        <p>loading...</p>
       )}
     </>
   );
