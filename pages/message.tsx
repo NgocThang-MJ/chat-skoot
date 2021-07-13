@@ -9,6 +9,7 @@ import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { IoMdSend, IoMdMenu, IoMdNotifications } from "react-icons/io";
 import { FiLogOut } from "react-icons/fi";
+import { GoTelescope } from "react-icons/go";
 import { debounce } from "lodash";
 import axios from "axios";
 
@@ -31,6 +32,8 @@ export default function Home() {
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const socket = io(`${server_url}`);
   const [input, setInput] = useState<String>("");
+  const [notFound, setNotFound] = useState(false);
+  const [inputFriend, setInputFriend] = useState("");
   const [text, setText] = useState<String>("");
   const [menu, setMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -56,6 +59,7 @@ export default function Home() {
           return user._id != ownerId;
         }
       );
+      !filteredUsers.length ? setNotFound(true) : setNotFound(false);
       setSearchedUsers(filteredUsers);
     } catch (err) {
       console.log(err);
@@ -141,8 +145,8 @@ export default function Home() {
                 <input
                   placeholder="Search"
                   className="text-gray-300 bg-gray-600 py-1 rounded outline-none border-none"
-                  onChange={(e) => setInput(e.target.value)}
-                  value={input.toString()}
+                  onChange={(e) => setInputFriend(e.target.value)}
+                  value={inputFriend}
                 />
               </form>
             </div>
@@ -273,7 +277,7 @@ export default function Home() {
                     value={input.toString()}
                   />
                 </form>
-                {searchedUsers.length ? (
+                {searchedUsers.length > 0 && (
                   <div className="absolute top-full bg-gray-900 p-3 rounded-md w-5/6">
                     {searchedUsers.map((user) => (
                       <Link href={`/profile/${user._id}`} key={user._id}>
@@ -295,7 +299,17 @@ export default function Home() {
                       </Link>
                     ))}
                   </div>
-                ) : null}
+                )}
+                {input.length > 2 && notFound && (
+                  <div className="absolute top-full bg-gray-900 p-3 rounded-md w-5/6">
+                    <div className="flex items-center">
+                      <GoTelescope className="text-gray-400 h-8 w-8" />
+                      <p className="text-gray-400 ml-4">
+                        Can't find user {input}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
