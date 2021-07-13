@@ -26,6 +26,12 @@ interface IUserProfile {
   friend_requests: string[];
 }
 
+interface IRequestUser {
+  _id: string;
+  name: string;
+  image: string;
+}
+
 export default function Home() {
   const router = useRouter();
   const [session, loadingSession] = useSession();
@@ -46,7 +52,9 @@ export default function Home() {
   const [text, setText] = useState<String>("");
   const [menu, setMenu] = useState(false);
   const [notification, setNotification] = useState(false);
+  const [requestUsers, setRequestUsers] = useState<IRequestUser[]>([]);
   const menuRef = useRef<HTMLDivElement>(null);
+  const notificationRef = useRef<HTMLDivElement>(null);
   // socket.on("connect", () => {
   //   console.log(socket.id, "id socket");
   // });
@@ -124,17 +132,42 @@ export default function Home() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!userProfile.friend_requests.length) return;
+    const getRequestUsers = async () => {
+      const response = await axios.post(`${server_url}/api/users`, {
+        ids: userProfile.friend_requests,
+      });
+      console.log(response.data);
+      return response.data;
+    };
+    getRequestUsers().then((users) => setRequestUsers(users));
+  }, [userProfile]);
+
   // Event click outside
   useEffect(() => {
-    function handleClick(e: any) {
+    function handleClickOutsideMenu(e: any) {
       if (!menu) return;
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenu(false);
       }
     }
-    window.addEventListener("click", handleClick);
-    return () => window.removeEventListener("click", handleClick);
-  }, [menu, menuRef]);
+    function handleClickOutsideNotification(e: any) {
+      if (!notification) return;
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(e.target)
+      ) {
+        setNotification(false);
+      }
+    }
+    window.addEventListener("click", handleClickOutsideMenu);
+    window.addEventListener("click", handleClickOutsideNotification);
+    return () => {
+      window.removeEventListener("click", handleClickOutsideMenu);
+      window.removeEventListener("click", handleClickOutsideNotification);
+    };
+  }, [menu, menuRef, notification, notificationRef]);
 
   // Send message
   const onSend = (e: FormEvent<HTMLFormElement>) => {
@@ -242,40 +275,34 @@ export default function Home() {
                   </div>
 
                   {notification &&
-                    (userProfile.friend_requests.length > 0 ? (
-                      <div className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10">
-                        {userProfile.friend_requests.map((request_id) => (
-                          // <Link href={`/profile/${user._id}`} key={user._id}>
-                          //   <a>
-                          //     <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
-                          //       <Image
-                          //         src={
-                          //           user.image ||
-                          //           `${process.env.NEXT_PUBLIC_USER_IMG}`
-                          //         }
-                          //         width={36}
-                          //         height={36}
-                          //         alt="Avatar"
-                          //         className="rounded-full"
-                          //       />
-                          //       <p className="ml-3">{user.name}</p>
-                          //     </div>
-                          //   </a>
-                          // </Link>
-
-                          <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
-                            {/* <Image
-                              src={
-                                user.image ||
-                                `${process.env.NEXT_PUBLIC_USER_IMG}`
-                              }
-                              width={36}
-                              height={36}
-                              alt="Avatar"
-                              className="rounded-full"
-                            /> */}
-                            <p className="ml-3">{request_id}</p>
-                          </div>
+                    (requestUsers.length > 0 ? (
+                      <div
+                        ref={notificationRef}
+                        className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10 w-64"
+                      >
+                        {requestUsers.map((user) => (
+                          <Link href={`/profile/${user._id}`} key={user._id}>
+                            <a>
+                              <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
+                                <Image
+                                  src={
+                                    user.image ||
+                                    `${process.env.NEXT_PUBLIC_USER_IMG}`
+                                  }
+                                  width={36}
+                                  height={36}
+                                  alt="Avatar"
+                                  className="rounded-full"
+                                />
+                                <div className="ml-3">
+                                  <p>{user.name}</p>
+                                  <p className="text-sm text-gray-400">
+                                    Sent you a friend request
+                                  </p>
+                                </div>
+                              </div>
+                            </a>
+                          </Link>
                         ))}
                       </div>
                     ) : (
