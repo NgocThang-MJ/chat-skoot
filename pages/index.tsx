@@ -2,7 +2,6 @@ import Head from "next/head";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { io } from "socket.io-client";
 import { signIn, useSession } from "next-auth/client";
 import { FaGithub, FaDiscord, FaFacebookSquare } from "react-icons/fa";
 

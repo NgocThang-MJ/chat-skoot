@@ -1,50 +1,26 @@
 import Head from "next/head";
-import { useRouter } from "next/router";
-import { getSession } from "next-auth/client";
+import { GetServerSideProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, MouseEvent, FormEvent } from "react";
 import axios from "axios";
 import { IoMdArrowBack } from "react-icons/io";
+import useSWR from "swr";
 
-export default function MyProfile() {
-  const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState({
-    username: "",
-    imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
-    userId: "",
-  });
-  const router = useRouter();
+export default function MyProfile(props: { id: string }) {
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
-
-  useEffect(() => {
-    console.log("re-run");
-    const getProfile = async () => {
-      const profile = await getSession();
-      return profile;
-    };
-    getProfile()
-      .then((profile) => {
-        if (!profile) return router.push("/");
-        setLoading(false);
-        setUserProfile({
-          ...userProfile,
-          username: profile?.user?.name!,
-          userId: profile?.userId as string,
-          imgUrl: profile?.user?.image!,
-        });
-      })
-      .catch(() => {
-        router.push("/");
-      });
-  }, []);
+  const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+  const { data, error } = useSWR(
+    `${server_url}/api/users/${props.id}`,
+    fetcher
+  );
 
   return (
     <div className="w-2/3 pt-8 mx-auto">
       <Head>
         <title>Profile</title>
       </Head>
-      {!loading ? (
+      {data && !error ? (
         <div>
           <Link href="/message">
             <a>
@@ -56,7 +32,7 @@ export default function MyProfile() {
           <div className="flex mb-5">
             <div className="mr-10">
               <Image
-                src={userProfile.imgUrl}
+                src={data.image}
                 width={160}
                 height={160}
                 objectFit="contain"
@@ -64,7 +40,7 @@ export default function MyProfile() {
               />
             </div>
             <div className="mt-8">
-              <p className="text-white text-2xl">{userProfile.username}</p>
+              <p className="text-white text-2xl">{data.name}</p>
             </div>
           </div>
 
@@ -73,6 +49,13 @@ export default function MyProfile() {
       ) : (
         <p>Loading...</p>
       )}
+      {error && <div>Can't find this user</div>}
     </div>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  return {
+    props: { id: context.params?.id },
+  };
+};

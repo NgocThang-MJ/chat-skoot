@@ -30,7 +30,7 @@ export default function Home() {
   });
   const [searchedUsers, setSearchedUsers] = useState<ISearchedUser[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
-  const socket = io(`${server_url}`);
+  // const socket = io(`${server_url}`);
   const [input, setInput] = useState<String>("");
   const [searching, setSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
@@ -71,13 +71,16 @@ export default function Home() {
       setSearching(false);
     }
   };
+
   const debouncedSearch = useRef(
     debounce((ownerId, query) => searchUser(ownerId, query), 500)
   ).current;
+
   const handleChange = async (e: FormEvent<HTMLInputElement>) => {
     setInput(e.currentTarget.value);
     if (e.currentTarget.value.length < 3) {
       setSearchedUsers([]);
+      setNotFound(false);
       return;
     }
     debouncedSearch(userProfile.userId, e.currentTarget.value);
