@@ -19,14 +19,22 @@ interface ISearchedUser {
   image: string;
 }
 
+interface IUserProfile {
+  userId: string;
+  username: string;
+  imgUrl: string;
+  friend_requests: string[];
+}
+
 export default function Home() {
   const router = useRouter();
   const [session, loadingSession] = useSession();
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState({
+  const [userProfile, setUserProfile] = useState<IUserProfile>({
     userId: "",
     username: "",
     imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    friend_requests: [],
   });
   const [searchedUsers, setSearchedUsers] = useState<ISearchedUser[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -37,6 +45,7 @@ export default function Home() {
   const [inputFriend, setInputFriend] = useState("");
   const [text, setText] = useState<String>("");
   const [menu, setMenu] = useState(false);
+  const [notification, setNotification] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   // socket.on("connect", () => {
   //   console.log(socket.id, "id socket");
@@ -94,7 +103,6 @@ export default function Home() {
   }, [session, loadingSession]);
 
   useEffect(() => {
-    console.log("re-run");
     const getProfile = async () => {
       const profile = await getSession();
       return profile;
@@ -108,6 +116,7 @@ export default function Home() {
           userId: profile?.userId as string,
           username: profile?.user?.name!,
           imgUrl: profile?.user?.image!,
+          friend_requests: profile?.friend_requests as Array<string>,
         });
       })
       .catch(() => {
@@ -220,9 +229,60 @@ export default function Home() {
                   <p>{userProfile.username}</p>
                 </div>
                 <div className="flex items-center relative">
-                  <div className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2">
+                  <div
+                    onClick={() => setNotification(!notification)}
+                    className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2 relative mr-2"
+                  >
                     <IoMdNotifications className="h-6 w-6" />
+                    {userProfile.friend_requests.length > 0 && (
+                      <div className="bg-red-500 text-white absolute top-0 text-sm rounded-full right-0 px-1">
+                        {userProfile.friend_requests.length}
+                      </div>
+                    )}
                   </div>
+
+                  {notification &&
+                    (userProfile.friend_requests.length > 0 ? (
+                      <div className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10">
+                        {userProfile.friend_requests.map((request_id) => (
+                          // <Link href={`/profile/${user._id}`} key={user._id}>
+                          //   <a>
+                          //     <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
+                          //       <Image
+                          //         src={
+                          //           user.image ||
+                          //           `${process.env.NEXT_PUBLIC_USER_IMG}`
+                          //         }
+                          //         width={36}
+                          //         height={36}
+                          //         alt="Avatar"
+                          //         className="rounded-full"
+                          //       />
+                          //       <p className="ml-3">{user.name}</p>
+                          //     </div>
+                          //   </a>
+                          // </Link>
+
+                          <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
+                            {/* <Image
+                              src={
+                                user.image ||
+                                `${process.env.NEXT_PUBLIC_USER_IMG}`
+                              }
+                              width={36}
+                              height={36}
+                              alt="Avatar"
+                              className="rounded-full"
+                            /> */}
+                            <p className="ml-3">{request_id}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-white">
+                        You don't have notification yet
+                      </p>
+                    ))}
                   <div
                     onClick={toggleMenu}
                     className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2"

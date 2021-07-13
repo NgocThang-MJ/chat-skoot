@@ -31,6 +31,8 @@ export default NextAuth({
         .findOne({ _id: new ObjectId(userId) });
       session.img_name = user.image_name;
       session.userId = userId;
+      session.friend_requests = user.friend_requests || [];
+      session.friends = user.friends || [];
       return session;
     },
   },
