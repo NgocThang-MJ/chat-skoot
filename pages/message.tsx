@@ -306,9 +306,11 @@ export default function Home() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-white">
-                        You don't have notification yet
-                      </p>
+                      <div className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10 w-64">
+                        <p className="text-white">
+                          You don't have notification yet
+                        </p>
+                      </div>
                     ))}
                   <div
                     onClick={toggleMenu}

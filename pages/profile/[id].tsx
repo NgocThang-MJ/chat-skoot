@@ -109,7 +109,7 @@ export default function Profile(props: { id: string }) {
       .catch(() => {
         router.push("/");
       });
-  }, []);
+  }, [anotherProfile]);
 
   return (
     <div className="w-2/3 pt-8 mx-auto">
