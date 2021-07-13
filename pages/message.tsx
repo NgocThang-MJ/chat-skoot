@@ -2,22 +2,32 @@ import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useEffect, useState, useRef, MouseEvent } from "react";
+import { useEffect, useState, useRef, MouseEvent, FormEvent } from "react";
 import { io } from "socket.io-client";
 import { signOut, getSession, useSession } from "next-auth/client";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { BiSearch } from "react-icons/bi";
 import { IoMdSend, IoMdMenu, IoMdNotifications } from "react-icons/io";
 import { FiLogOut } from "react-icons/fi";
+import { debounce } from "lodash";
+import axios from "axios";
+
+interface ISearchedUser {
+  _id: string;
+  name: string;
+  image: string;
+}
 
 export default function Home() {
   const router = useRouter();
   const [session, loadingSession] = useSession();
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState({
+    userId: "",
     username: "",
     imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
   });
+  const [searchedUsers, setSearchedUsers] = useState<ISearchedUser[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const socket = io(`${server_url}`);
   const [input, setInput] = useState<String>("");
@@ -35,6 +45,35 @@ export default function Home() {
     signOut({ redirect: false, callbackUrl: "/" });
   };
 
+  // Search user
+  const searchUser = async (ownerId: string, query: string) => {
+    try {
+      const response = await axios.post(`${server_url}/api/users/search`, {
+        query,
+      });
+      const filteredUsers: ISearchedUser[] = response.data.users.filter(
+        (user: ISearchedUser) => {
+          return user._id != ownerId;
+        }
+      );
+      setSearchedUsers(filteredUsers);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const debouncedSearch = useRef(
+    debounce((ownerId, query) => searchUser(ownerId, query), 500)
+  ).current;
+  const handleChange = async (e: FormEvent<HTMLInputElement>) => {
+    setInput(e.currentTarget.value);
+    if (e.currentTarget.value.length < 3) {
+      setSearchedUsers([]);
+      return;
+    }
+    debouncedSearch(userProfile.userId, e.currentTarget.value);
+  };
+
+  // Effect
   useEffect(() => {
     if (!session && !loadingSession) {
       router.push("/");
@@ -53,6 +92,7 @@ export default function Home() {
         setLoading(false);
         setUserProfile({
           ...userProfile,
+          userId: profile?.userId as string,
           username: profile?.user?.name!,
           imgUrl: profile?.user?.image!,
         });
@@ -75,7 +115,7 @@ export default function Home() {
   }, [menu, menuRef]);
 
   // Send message
-  const onSend = (e: MouseEvent<HTMLFormElement>) => {
+  const onSend = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log(text);
     setText("");
@@ -91,13 +131,16 @@ export default function Home() {
           <div className="flex mx-5 h-full text-white pt-4">
             <div className="w-64 flex-shrink-0 border-r border-gray-600">
               <p className="text-xl">Chats</p>
-              <form className="bg-gray-500 rounded mr-5 mt-3 items-center hidden md:flex">
+              <form
+                className="bg-gray-600 rounded mr-5 mt-3 items-center hidden md:flex"
+                onSubmit={(e: FormEvent<HTMLFormElement>) => e.preventDefault()}
+              >
                 <button type="submit" className="px-2">
                   <BiSearch className="h-5 w-5 text-gray-800" />
                 </button>
                 <input
                   placeholder="Search"
-                  className="text-gray-300 bg-gray-500 py-1 rounded outline-none border-none"
+                  className="text-gray-300 bg-gray-600 py-1 rounded outline-none border-none"
                   onChange={(e) => setInput(e.target.value)}
                   value={input.toString()}
                 />
@@ -105,8 +148,8 @@ export default function Home() {
             </div>
 
             <div className="flex-grow border-r border-gray-600 relative">
-              <div className="bg-red-500 flex justify-between items-center">
-                <div className="flex items-center">
+              <div className="flex justify-between items-center border-b border-gray-700 pb-1">
+                <div className="flex items-center ml-2">
                   <Image
                     src={
                       userProfile.imgUrl ||
@@ -119,9 +162,9 @@ export default function Home() {
                   />
                   <p className="ml-3">{userProfile.username}</p>
                 </div>
-                <div className="mr-4 flex">
-                  <FaPhoneAlt className="h-5 w-5 text-black mr-6 cursor-pointer" />
-                  <FaVideo className="h-5 w-5 text-black mr-6 cursor-pointer" />
+                <div className="mr-2 flex">
+                  <FaPhoneAlt className="h-5 w-5 text-red-500 mr-6 cursor-pointer" />
+                  <FaVideo className="h-5 w-5 text-red-500 mr-4 cursor-pointer" />
                 </div>
               </div>
 
@@ -146,10 +189,10 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex-shrink-0 w-80">
+            <div className="flex-shrink-0 w-80 px-2">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <div className="mx-2 h-8">
+                  <div className="mr-2 h-8">
                     <Image
                       src={
                         userProfile.imgUrl ||
@@ -176,7 +219,7 @@ export default function Home() {
                   {menu && (
                     <div
                       ref={menuRef}
-                      className={`absolute top-full mt-3 bg-gray-900 w-72 right-0 rounded-md`}
+                      className={`absolute top-full mt-3 bg-gray-900 w-72 right-0 rounded-md z-10`}
                     >
                       <Link href="/profile">
                         <a>
@@ -211,6 +254,48 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+              </div>
+
+              <div className="mt-5 relative">
+                <form
+                  className="bg-gray-600 rounded mr-5 mt-3 items-center hidden md:flex"
+                  onSubmit={(e: MouseEvent<HTMLFormElement>) =>
+                    e.preventDefault()
+                  }
+                >
+                  <button type="submit" className="px-2">
+                    <BiSearch className="h-5 w-5 text-gray-800" />
+                  </button>
+                  <input
+                    placeholder="Search in Chat Skoot"
+                    className="text-gray-300 bg-gray-600 py-1 rounded outline-none border-none"
+                    onChange={handleChange}
+                    value={input.toString()}
+                  />
+                </form>
+                {searchedUsers.length ? (
+                  <div className="absolute top-full bg-gray-900 p-3 rounded-md w-5/6">
+                    {searchedUsers.map((user) => (
+                      <Link href={`/profile/${user._id}`} key={user._id}>
+                        <a>
+                          <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
+                            <Image
+                              src={
+                                user.image ||
+                                `${process.env.NEXT_PUBLIC_USER_IMG}`
+                              }
+                              width={36}
+                              height={36}
+                              alt="Avatar"
+                              className="rounded-full"
+                            />
+                            <p className="ml-3">{user.name}</p>
+                          </div>
+                        </a>
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>

@@ -7,7 +7,7 @@ import { useEffect, useState, MouseEvent, FormEvent } from "react";
 import axios from "axios";
 import { IoMdArrowBack } from "react-icons/io";
 
-export default function Profile() {
+export default function MyProfile() {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState({
     username: "",
@@ -27,6 +27,7 @@ export default function Profile() {
     try {
       e.preventDefault();
       if (!inputUsername) return;
+      if (inputUsername === userProfile.username) return;
       setSaveBtnText("Saving...");
       const response = await axios.post(
         `${server_url}/api/users/change-user-name`,
