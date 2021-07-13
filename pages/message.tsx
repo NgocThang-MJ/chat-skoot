@@ -32,6 +32,7 @@ export default function Home() {
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const socket = io(`${server_url}`);
   const [input, setInput] = useState<String>("");
+  const [searching, setSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [inputFriend, setInputFriend] = useState("");
   const [text, setText] = useState<String>("");
@@ -51,6 +52,9 @@ export default function Home() {
   // Search user
   const searchUser = async (ownerId: string, query: string) => {
     try {
+      setSearching(true);
+      setSearchedUsers([]);
+      setNotFound(false);
       const response = await axios.post(`${server_url}/api/users/search`, {
         query,
       });
@@ -59,10 +63,12 @@ export default function Home() {
           return user._id != ownerId;
         }
       );
+      setSearching(false);
       !filteredUsers.length ? setNotFound(true) : setNotFound(false);
       setSearchedUsers(filteredUsers);
     } catch (err) {
       console.log(err);
+      setSearching(false);
     }
   };
   const debouncedSearch = useRef(
@@ -307,6 +313,14 @@ export default function Home() {
                       <p className="text-gray-400 ml-4">
                         Can't find user {input}
                       </p>
+                    </div>
+                  </div>
+                )}
+                {searching && (
+                  <div className="absolute top-full bg-gray-900 p-3 rounded-md w-5/6">
+                    <div className="flex items-center">
+                      <GoTelescope className="text-gray-400 h-8 w-8" />
+                      <p className="text-gray-400 ml-4">Searching...</p>
                     </div>
                   </div>
                 )}
