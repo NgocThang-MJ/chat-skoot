@@ -141,8 +141,8 @@ export default function Profile(props: { id: string }) {
           </div>
 
           <div className="inline-block">
-            {userProfile.friends.includes(anotherProfile.userId) ||
-              (!userProfile.friendRequest.includes(anotherProfile.userId) && (
+            {!userProfile.friends.includes(anotherProfile.userId) &&
+              !userProfile.friendRequest.includes(anotherProfile.userId) && (
                 <div
                   onClick={sendFriendRequest}
                   className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
@@ -158,7 +158,7 @@ export default function Profile(props: { id: string }) {
                     userProfile.userId
                   ) && <p className="text-blue-500 ml-2">Pending</p>}
                 </div>
-              ))}
+              )}
             {userProfile.friendRequest.includes(anotherProfile.userId) && (
               <div
                 onClick={approveRequest}
