@@ -48,6 +48,7 @@ export default function Home() {
           username: profile?.user?.name!,
           imgUrl: profile?.user?.image!,
           friend_requests: profile?.friend_requests as Array<string>,
+          friends: profile?.friends as Array<string>,
         });
       })
       .catch(() => {
@@ -63,7 +64,7 @@ export default function Home() {
             <title>Chat Skoot</title>
           </Head>
           <div className="flex mx-5 h-full text-white pt-4">
-            <Friends />
+            <Friends userProfile={userProfile} />
 
             <Chat userProfile={userProfile} />
 

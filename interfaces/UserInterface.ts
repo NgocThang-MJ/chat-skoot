@@ -24,3 +24,9 @@ export interface IAnotherProfile {
   imgUrl: string;
   friendRequests: string[];
 }
+
+export interface IFriend {
+  name: string;
+  _id: string;
+  image: string;
+}

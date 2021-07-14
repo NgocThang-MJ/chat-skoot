@@ -83,7 +83,6 @@ export default function Option(props: {
       const response = await axios.post(`${server_url}/api/users`, {
         ids: userProfile.friend_requests,
       });
-      console.log(response.data);
       return response.data;
     };
     getRequestUsers().then((users) => setRequestUsers(users));
