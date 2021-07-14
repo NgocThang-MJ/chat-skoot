@@ -1,12 +1,12 @@
 import Head from "next/head";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { signIn, useSession } from "next-auth/client";
+import { signIn, useSession, getSession } from "next-auth/client";
 import { FaGithub, FaDiscord, FaFacebookSquare } from "react-icons/fa";
 
 export default function Home() {
-  const [session, loading] = useSession();
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const redirect_url = `${process.env.NEXT_PUBLIC_REDIRECT_URL}`;
   // const socket = io("http://localhost:5000");
@@ -14,11 +14,17 @@ export default function Home() {
   //   console.log(socket.id, "id socket");
   // });
 
+  const getProfile = async () => {
+    const profile = await getSession();
+    return profile;
+  };
+
   useEffect(() => {
-    if (session) {
-      router.push("/message");
-    }
-  }, [session]);
+    getProfile().then((profile) => {
+      if (profile) return router.push("/message");
+      setLoading(false);
+    });
+  }, []);
 
   // if (loading) {
   //   return <p>Loading...</p>;
@@ -29,7 +35,7 @@ export default function Home() {
       <Head>
         <title>Chat Skoot</title>
       </Head>
-      {!session && !loading ? (
+      {!loading ? (
         <div className="max-w-screen-2xl w-11/12 mx-auto flex flex-row justify-between items-start h-full mt-14">
           <div>
             <p className="text-5xl text-red-500">Chat Skoot</p>
