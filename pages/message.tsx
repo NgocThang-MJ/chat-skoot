@@ -274,13 +274,13 @@ export default function Home() {
                     )}
                   </div>
 
-                  {notification &&
-                    (requestUsers.length > 0 ? (
-                      <div
-                        ref={notificationRef}
-                        className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10 w-64"
-                      >
-                        {requestUsers.map((user) => (
+                  {notification && (
+                    <div
+                      ref={notificationRef}
+                      className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10 w-64"
+                    >
+                      {requestUsers.length > 0 ? (
+                        requestUsers.map((user) => (
                           <Link href={`/profile/${user._id}`} key={user._id}>
                             <a>
                               <div className="flex items-center hover:bg-gray-700 transition rounded-md p-2">
@@ -303,15 +303,14 @@ export default function Home() {
                               </div>
                             </a>
                           </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10 w-64">
+                        ))
+                      ) : (
                         <p className="text-white">
                           You don't have notification yet
                         </p>
-                      </div>
-                    ))}
+                      )}
+                    </div>
+                  )}
                   <div
                     onClick={toggleMenu}
                     className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2"
