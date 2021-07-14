@@ -10,25 +10,16 @@ import useSWR from "swr";
 import { getSession } from "next-auth/client";
 import { useRouter } from "next/router";
 
-interface IAnotherProfile {
-  userId: string;
-  name: string;
-  imgUrl: string;
-  friendRequests: string[];
-}
-
-interface IUserProfile {
-  userId: string;
-  friendRequest: string[];
-  friends: string[];
-}
+import { IAnotherProfile, IUserProfile } from "../../interfaces/UserInterface";
 
 export default function Profile(props: { id: string }) {
   const router = useRouter();
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const [userProfile, setUserProfile] = useState<IUserProfile>({
     userId: "",
-    friendRequest: [],
+    username: "",
+    imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    friend_requests: [],
     friends: [],
   });
   const [anotherProfile, setAnotherProfile] = useState<IAnotherProfile>({
@@ -85,7 +76,7 @@ export default function Profile(props: { id: string }) {
       setUserProfile({
         ...userProfile,
         friends: userProfile.friends.concat(anotherProfile.userId),
-        friendRequest: userProfile.friendRequest.filter(
+        friend_requests: userProfile.friend_requests.filter(
           (request) => request !== anotherProfile.userId
         ),
       });
@@ -107,7 +98,7 @@ export default function Profile(props: { id: string }) {
         setUserProfile({
           ...userProfile,
           userId: profile?.userId as string,
-          friendRequest: (profile?.friend_requests as Array<string>) || [],
+          friend_requests: (profile?.friend_requests as Array<string>) || [],
           friends: profile?.friends as Array<string>,
         });
         setLoading(false);
@@ -149,7 +140,7 @@ export default function Profile(props: { id: string }) {
           <div className="inline-block">
             {!loading &&
               !userProfile.friends.includes(anotherProfile.userId) &&
-              !userProfile.friendRequest.includes(anotherProfile.userId) && (
+              !userProfile.friend_requests.includes(anotherProfile.userId) && (
                 <div
                   onClick={sendFriendRequest}
                   className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
@@ -167,7 +158,7 @@ export default function Profile(props: { id: string }) {
                 </div>
               )}
             {!loading &&
-              userProfile.friendRequest.includes(anotherProfile.userId) && (
+              userProfile.friend_requests.includes(anotherProfile.userId) && (
                 <div
                   onClick={approveRequest}
                   className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
