@@ -12,8 +12,9 @@ import { useRouter } from "next/router";
 
 import { IAnotherProfile, IUserProfile } from "../../interfaces/UserInterface";
 
-export default function Profile(props: { id: string }) {
+export default function Profile() {
   const router = useRouter();
+  const { id } = router.query;
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const [userProfile, setUserProfile] = useState<IUserProfile>({
     userId: "",
@@ -30,8 +31,9 @@ export default function Profile(props: { id: string }) {
   });
   const [loading, setLoading] = useState(false);
 
-  const fetcher = async (url: string) => {
-    const response = await axios.get(url);
+  const fetcher = async (url: string, id: string) => {
+    if (!id) return;
+    const response = await axios.get(`${url}/${id}`);
     setAnotherProfile({
       ...anotherProfile,
       userId: response.data._id,
@@ -42,10 +44,7 @@ export default function Profile(props: { id: string }) {
     return response.data;
   };
 
-  const { data, error } = useSWR(
-    `${server_url}/api/users/${props.id}`,
-    fetcher
-  );
+  const { data, error } = useSWR([`${server_url}/api/users`, id], fetcher);
 
   // Send Friend Request
   const sendFriendRequest = async () => {
@@ -182,8 +181,8 @@ export default function Profile(props: { id: string }) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  return {
-    props: { id: context.params?.id },
-  };
-};
+// export const getServerSideProps: GetServerSideProps = async (context) => {
+//   return {
+//     props: { id: context.params?.id },
+//   };
+// };

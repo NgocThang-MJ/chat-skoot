@@ -48,7 +48,10 @@ export default function Friend(props: { userProfile: IUserProfile }) {
       <div className="mt-5">
         {friends.length > 0 &&
           friends.map((friend) => (
-            <div className="flex items-center rounded-md hover:bg-gray-700 transition p-2 cursor-pointer mb-2">
+            <div
+              className="flex items-center rounded-md hover:bg-gray-700 p-2 cursor-pointer mb-2"
+              key={friend._id}
+            >
               <Image
                 src={friend.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
                 width={40}
