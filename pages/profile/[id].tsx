@@ -37,6 +37,8 @@ export default function Profile(props: { id: string }) {
     imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
     friendRequests: [],
   });
+  const [loading, setLoading] = useState(false);
+
   const fetcher = async (url: string) => {
     const response = await axios.get(url);
     setAnotherProfile({
@@ -48,10 +50,12 @@ export default function Profile(props: { id: string }) {
     });
     return response.data;
   };
+
   const { data, error } = useSWR(
     `${server_url}/api/users/${props.id}`,
     fetcher
   );
+
   // Send Friend Request
   const sendFriendRequest = async () => {
     try {
@@ -96,6 +100,7 @@ export default function Profile(props: { id: string }) {
       const profile = await getSession();
       return profile;
     };
+    setLoading(true);
     getProfile()
       .then((profile) => {
         if (!profile) return router.push("/");
@@ -105,6 +110,7 @@ export default function Profile(props: { id: string }) {
           friendRequest: (profile?.friend_requests as Array<string>) || [],
           friends: profile?.friends as Array<string>,
         });
+        setLoading(false);
       })
       .catch(() => {
         router.push("/");
@@ -141,7 +147,8 @@ export default function Profile(props: { id: string }) {
           </div>
 
           <div className="inline-block">
-            {!userProfile.friends.includes(anotherProfile.userId) &&
+            {!loading &&
+              !userProfile.friends.includes(anotherProfile.userId) &&
               !userProfile.friendRequest.includes(anotherProfile.userId) && (
                 <div
                   onClick={sendFriendRequest}
@@ -159,16 +166,17 @@ export default function Profile(props: { id: string }) {
                   ) && <p className="text-blue-500 ml-2">Pending</p>}
                 </div>
               )}
-            {userProfile.friendRequest.includes(anotherProfile.userId) && (
-              <div
-                onClick={approveRequest}
-                className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
-              >
-                <FaUserPlus className={`h-7 w-7 text-blue-500`} />
-                <p className="text-blue-500 ml-2">Approve</p>
-              </div>
-            )}
-            {userProfile.friends.includes(anotherProfile.userId) && (
+            {!loading &&
+              userProfile.friendRequest.includes(anotherProfile.userId) && (
+                <div
+                  onClick={approveRequest}
+                  className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
+                >
+                  <FaUserPlus className={`h-7 w-7 text-blue-500`} />
+                  <p className="text-blue-500 ml-2">Approve</p>
+                </div>
+              )}
+            {!loading && userProfile.friends.includes(anotherProfile.userId) && (
               <div className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center">
                 <FaUserCheck className="h-7 w-7 text-blue-500" />
               </div>
