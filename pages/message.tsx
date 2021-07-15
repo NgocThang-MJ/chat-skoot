@@ -21,10 +21,12 @@ export default function Home() {
     friend_requests: [],
     friends: [],
   });
-  // const socket = io(`${server_url}`);
-  // socket.on("connect", () => {
-  //   console.log(socket.id, "id socket");
-  // });
+  const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
+
+  const getProfile = async () => {
+    const profile = await getSession();
+    return profile;
+  };
 
   // Effect
   useEffect(() => {
@@ -34,10 +36,13 @@ export default function Home() {
   }, [session, loadingSession]);
 
   useEffect(() => {
-    const getProfile = async () => {
-      const profile = await getSession();
-      return profile;
-    };
+    const socket = io(`${server_url}`);
+    socket.on("connect", () => {
+      console.log(socket.id, "id socket");
+    });
+  }, []);
+
+  useEffect(() => {
     getProfile()
       .then((profile) => {
         if (!profile) return router.push("/");
