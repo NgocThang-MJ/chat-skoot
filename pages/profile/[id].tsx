@@ -35,13 +35,6 @@ export default function Profile() {
   const fetcher = async (url: string, id: string) => {
     if (!id) return;
     const response = await axios.get(`${url}/${id}`);
-    setAnotherProfile({
-      ...anotherProfile,
-      user_id: response.data._id,
-      img_url: response.data.image,
-      name: response.data.name,
-      friendRequests: response.data.friend_requests || [],
-    });
     return response.data;
   };
 
@@ -84,6 +77,22 @@ export default function Profile() {
       console.log(err);
     }
   };
+
+  useEffect(() => {
+    if (error) {
+      router.push("/message");
+    }
+    if (data) {
+      console.log(data);
+      setAnotherProfile({
+        ...anotherProfile,
+        user_id: data._id,
+        img_url: data.image,
+        name: data.name,
+        friendRequests: data.friend_requests || [],
+      });
+    }
+  }, [data, error]);
 
   useEffect(() => {
     const getProfile = async () => {
