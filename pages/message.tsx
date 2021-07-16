@@ -10,6 +10,8 @@ import Friends from "../components/message/Friends";
 import Chat from "../components/message/Chat";
 import Option from "../components/message/Option";
 
+import socket from "../util/socket";
+
 import { IUserProfile } from "../interfaces/UserInterface";
 
 export default function Home() {
@@ -64,7 +66,7 @@ export default function Home() {
   useEffect(() => {
     if (error) {
       localStorage.removeItem("session.user");
-      router.push("/");
+      signOut({ redirect: false, callbackUrl: "/" });
     }
     if (data) {
       setUserProfile({

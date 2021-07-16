@@ -2,7 +2,7 @@ import Head from "next/head";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
-import { signIn, useSession, getSession } from "next-auth/client";
+import { signIn, useSession } from "next-auth/client";
 import { FaGithub, FaDiscord, FaFacebookSquare } from "react-icons/fa";
 
 export default function Home() {
@@ -14,9 +14,6 @@ export default function Home() {
   // });
 
   useEffect(() => {
-    if (localStorage.getItem("session.user")) {
-      router.push("/message");
-    }
     if (session) {
       localStorage.setItem("session.user", (session?.user_id as string) || "");
       router.push("/message");
