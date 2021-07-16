@@ -18,7 +18,7 @@ export default function Home() {
       router.push("/message");
     }
     if (session) {
-      localStorage.setItem("session.user", (session?.userId as string) || "");
+      localStorage.setItem("session.user", (session?.user_id as string) || "");
       router.push("/message");
     }
   }, [session, loadingSession]);

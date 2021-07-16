@@ -83,7 +83,6 @@ export default function Profile() {
       router.push("/message");
     }
     if (data) {
-      console.log(data);
       setAnotherProfile({
         ...anotherProfile,
         user_id: data._id,

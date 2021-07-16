@@ -62,8 +62,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    console.log(data);
-    console.log(error);
     if (error) {
       localStorage.removeItem("session.user");
       router.push("/");
