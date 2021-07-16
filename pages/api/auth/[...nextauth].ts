@@ -23,6 +23,12 @@ export default NextAuth({
     }),
   ],
   callbacks: {
+    // async signIn(user, account, profile) {
+    //   // const userId = JSON.parse(JSON.stringify(user)).id;
+    //   // localStorage.setItem("session.user", userId);
+    //   console.log(localStorage);
+    //   return true;
+    // },
     async session(session, token) {
       const userId = JSON.parse(JSON.stringify(token)).id;
       const { db } = await connectToDatabase();

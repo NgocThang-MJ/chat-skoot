@@ -21,7 +21,7 @@ export default function Chat(props: { userProfile: IUserProfile }) {
         <div className="flex items-center ml-2">
           <Image
             src={
-              props.userProfile.imgUrl || `${process.env.NEXT_PUBLIC_USER_IMG}`
+              props.userProfile.img_url || `${process.env.NEXT_PUBLIC_USER_IMG}`
             }
             width={36}
             height={36}

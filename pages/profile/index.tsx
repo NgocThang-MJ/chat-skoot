@@ -1,20 +1,26 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { getSession } from "next-auth/client";
+import { useSession, signOut } from "next-auth/client";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, MouseEvent, FormEvent } from "react";
 import axios from "axios";
 import { IoMdArrowBack } from "react-icons/io";
+import useSWR from "swr";
+import { IUserProfile } from "../../interfaces/UserInterface";
 
 export default function MyProfile() {
   const [loading, setLoading] = useState(true);
-  const [userProfile, setUserProfile] = useState({
+  const [session, loadingSession] = useSession();
+  const [id, setId] = useState("");
+  const [userProfile, setUserProfile] = useState<IUserProfile>({
     username: "",
-    imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    img_url: `${process.env.NEXT_PUBLIC_USER_IMG}`,
     email: "",
-    userId: "",
-    imgName: "",
+    user_id: "",
+    img_name: "",
+    friend_requests: [],
+    friends: [],
   });
   const [inputUsername, setInputUsername] = useState("");
   const [image, setImage] = useState<File>();
@@ -23,19 +29,29 @@ export default function MyProfile() {
   const router = useRouter();
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
+  const fetcher = async (url: string, id: string) => {
+    if (!id) return;
+    const response = await axios.get(`${url}/${id}`);
+    return response.data;
+  };
+
+  const { data, error } = useSWR([`${server_url}/api/users`, id], fetcher);
+
   const changeUsername = async (e: MouseEvent<HTMLFormElement>) => {
     try {
       e.preventDefault();
       if (!inputUsername) return;
       if (inputUsername === userProfile.username) return;
+      console.log(inputUsername);
       setSaveBtnText("Saving...");
       const response = await axios.post(
         `${server_url}/api/users/change-user-name`,
         {
           newUsername: inputUsername,
-          userId: userProfile.userId,
+          user_id: userProfile.user_id,
         }
       );
+      console.log(response.data);
       setUserProfile({
         ...userProfile,
         username: response.data.newUsername,
@@ -59,12 +75,12 @@ export default function MyProfile() {
           const res = await axios.post(`${server_url}/api/users/upload`, {
             data: reader.result,
             name: image.name,
-            userId: userProfile.userId,
-            imgName: userProfile.imgName,
+            user_id: userProfile.user_id,
+            img_name: userProfile.img_name,
           });
           setUserProfile({
             ...userProfile,
-            imgUrl: res.data.url,
+            img_url: res.data.url,
           });
           setImage(undefined);
           setNotification("");
@@ -90,29 +106,39 @@ export default function MyProfile() {
   };
 
   useEffect(() => {
-    console.log("re-run");
-    const getProfile = async () => {
-      const profile = await getSession();
-      return profile;
-    };
-    getProfile()
-      .then((profile) => {
-        if (!profile) return router.push("/");
-        setLoading(false);
-        setInputUsername(profile?.user?.name!);
-        setUserProfile({
-          ...userProfile,
-          username: profile?.user?.name!,
-          email: profile?.user?.email || "",
-          userId: profile?.userId as string,
-          imgName: profile?.img_name as string,
-          imgUrl: profile?.user?.image!,
-        });
-      })
-      .catch(() => {
-        router.push("/");
-      });
+    if (!session && !loadingSession) {
+      localStorage.removeItem("session.user");
+      router.push("/");
+    }
+  }, [session, loadingSession]);
+
+  useEffect(() => {
+    if (localStorage.getItem("session.user")) {
+      setId(localStorage.getItem("session.user") || "");
+    } else {
+      localStorage.removeItem("session.user");
+      signOut({ redirect: false, callbackUrl: "/" });
+    }
   }, []);
+
+  useEffect(() => {
+    if (error) {
+      localStorage.removeItem("session.user");
+      router.push("/");
+    }
+    if (data) {
+      setUserProfile({
+        ...userProfile,
+        user_id: data._id,
+        username: data.name,
+        email: data.email,
+        img_url: data.image,
+        img_name: data.image_name,
+      });
+      setInputUsername(data.name);
+      setLoading(false);
+    }
+  }, [data, error]);
 
   return (
     <div className="w-2/3 pt-8 mx-auto">
@@ -131,7 +157,7 @@ export default function MyProfile() {
           <div className="flex mb-5">
             <div className="mr-10">
               <Image
-                src={userProfile.imgUrl}
+                src={userProfile.img_url}
                 width={160}
                 height={160}
                 objectFit="contain"

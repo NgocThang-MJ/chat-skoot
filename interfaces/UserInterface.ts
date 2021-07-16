@@ -1,7 +1,9 @@
 export interface IUserProfile {
-  userId: string;
+  user_id: string;
+  email: string;
   username: string;
-  imgUrl: string;
+  img_url: string;
+  img_name: string;
   friend_requests: string[];
   friends: string[];
 }
@@ -19,9 +21,9 @@ export interface ISearchedUser {
 }
 
 export interface IAnotherProfile {
-  userId: string;
+  user_id: string;
   name: string;
-  imgUrl: string;
+  img_url: string;
   friendRequests: string[];
 }
 

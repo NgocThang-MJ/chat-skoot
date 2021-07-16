@@ -1,8 +1,7 @@
 import Head from "next/head";
-import { GetServerSideProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, MouseEvent, FormEvent } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { IoMdArrowBack } from "react-icons/io";
 import { FaUserPlus, FaUserCheck } from "react-icons/fa";
@@ -17,16 +16,18 @@ export default function Profile() {
   const { id } = router.query;
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const [userProfile, setUserProfile] = useState<IUserProfile>({
-    userId: "",
+    user_id: "",
+    email: "",
     username: "",
-    imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    img_url: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    img_name: "",
     friend_requests: [],
     friends: [],
   });
   const [anotherProfile, setAnotherProfile] = useState<IAnotherProfile>({
-    userId: "",
+    user_id: "",
     name: "",
-    imgUrl: `${process.env.NEXT_PUBLIC_USER_IMG}`,
+    img_url: `${process.env.NEXT_PUBLIC_USER_IMG}`,
     friendRequests: [],
   });
   const [loading, setLoading] = useState(false);
@@ -36,8 +37,8 @@ export default function Profile() {
     const response = await axios.get(`${url}/${id}`);
     setAnotherProfile({
       ...anotherProfile,
-      userId: response.data._id,
-      imgUrl: response.data.image,
+      user_id: response.data._id,
+      img_url: response.data.image,
       name: response.data.name,
       friendRequests: response.data.friend_requests || [],
     });
@@ -49,15 +50,15 @@ export default function Profile() {
   // Send Friend Request
   const sendFriendRequest = async () => {
     try {
-      if (anotherProfile.friendRequests.includes(userProfile.userId)) return;
+      if (anotherProfile.friendRequests.includes(userProfile.user_id)) return;
       await axios.post(`${server_url}/api/users/friend-request`, {
-        senderId: userProfile.userId,
-        receiverId: anotherProfile.userId,
+        senderId: userProfile.user_id,
+        receiverId: anotherProfile.user_id,
       });
       setAnotherProfile({
         ...anotherProfile,
         friendRequests: anotherProfile.friendRequests.concat(
-          userProfile.userId
+          userProfile.user_id
         ),
       });
     } catch (err) {
@@ -69,14 +70,14 @@ export default function Profile() {
   const approveRequest = async () => {
     try {
       await axios.post(`${server_url}/api/users/approve-request`, {
-        userId: userProfile.userId,
-        friendId: anotherProfile.userId,
+        user_id: userProfile.user_id,
+        friendId: anotherProfile.user_id,
       });
       setUserProfile({
         ...userProfile,
-        friends: userProfile.friends.concat(anotherProfile.userId),
+        friends: userProfile.friends.concat(anotherProfile.user_id),
         friend_requests: userProfile.friend_requests.filter(
-          (request) => request !== anotherProfile.userId
+          (request) => request !== anotherProfile.user_id
         ),
       });
     } catch (err) {
@@ -85,7 +86,6 @@ export default function Profile() {
   };
 
   useEffect(() => {
-    console.log("re-run");
     const getProfile = async () => {
       const profile = await getSession();
       return profile;
@@ -96,7 +96,7 @@ export default function Profile() {
         if (!profile) return router.push("/");
         setUserProfile({
           ...userProfile,
-          userId: profile?.userId as string,
+          user_id: profile?.user_id as string,
           friend_requests: (profile?.friend_requests as Array<string>) || [],
           friends: profile?.friends as Array<string>,
         });
@@ -105,7 +105,7 @@ export default function Profile() {
       .catch(() => {
         router.push("/");
       });
-  }, [anotherProfile]);
+  }, []);
 
   return (
     <div className="w-2/3 pt-8 mx-auto">
@@ -124,7 +124,7 @@ export default function Profile() {
           <div className="flex mb-5">
             <div className="mr-10">
               <Image
-                src={anotherProfile.imgUrl}
+                src={anotherProfile.img_url}
                 width={160}
                 height={160}
                 objectFit="contain"
@@ -138,26 +138,28 @@ export default function Profile() {
 
           <div className="inline-block">
             {!loading &&
-              !userProfile.friends.includes(anotherProfile.userId) &&
-              !userProfile.friend_requests.includes(anotherProfile.userId) && (
+              !userProfile.friends.includes(anotherProfile.user_id) &&
+              !userProfile.friend_requests.includes(anotherProfile.user_id) && (
                 <div
                   onClick={sendFriendRequest}
                   className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
                 >
                   <FaUserPlus
                     className={`h-7 w-7 ${
-                      anotherProfile.friendRequests.includes(userProfile.userId)
+                      anotherProfile.friendRequests.includes(
+                        userProfile.user_id
+                      )
                         ? "text-blue-500"
                         : "text-gray-400"
                     }`}
                   />
                   {anotherProfile.friendRequests.includes(
-                    userProfile.userId
+                    userProfile.user_id
                   ) && <p className="text-blue-500 ml-2">Pending</p>}
                 </div>
               )}
             {!loading &&
-              userProfile.friend_requests.includes(anotherProfile.userId) && (
+              userProfile.friend_requests.includes(anotherProfile.user_id) && (
                 <div
                   onClick={approveRequest}
                   className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center"
@@ -166,7 +168,7 @@ export default function Profile() {
                   <p className="text-blue-500 ml-2">Approve</p>
                 </div>
               )}
-            {!loading && userProfile.friends.includes(anotherProfile.userId) && (
+            {!loading && userProfile.friends.includes(anotherProfile.user_id) && (
               <div className="p-2 hover:bg-gray-700 transition rounded-md cursor-pointer flex items-center">
                 <FaUserCheck className="h-7 w-7 text-blue-500" />
               </div>
@@ -180,9 +182,3 @@ export default function Profile() {
     </div>
   );
 }
-
-// export const getServerSideProps: GetServerSideProps = async (context) => {
-//   return {
-//     props: { id: context.params?.id },
-//   };
-// };

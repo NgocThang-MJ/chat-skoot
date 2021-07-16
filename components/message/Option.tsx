@@ -37,6 +37,7 @@ export default function Option(props: {
 
   const logout = () => {
     props.setLoading(true);
+    localStorage.removeItem("session.user");
     signOut({ redirect: false, callbackUrl: "/" });
   };
 
@@ -47,7 +48,7 @@ export default function Option(props: {
       setNotFound(false);
       return;
     }
-    debouncedSearch(userProfile.userId, e.currentTarget.value);
+    debouncedSearch(userProfile.user_id, e.currentTarget.value);
   };
 
   // Search user
@@ -119,7 +120,7 @@ export default function Option(props: {
         <div className="flex items-center">
           <div className="mr-2 h-8">
             <Image
-              src={userProfile.imgUrl || `${process.env.NEXT_PUBLIC_USER_IMG}`}
+              src={userProfile.img_url || `${process.env.NEXT_PUBLIC_USER_IMG}`}
               width={32}
               height={32}
               alt="Avatar"
@@ -192,7 +193,7 @@ export default function Option(props: {
                     <div className="mr-3 w-12 h-12">
                       <Image
                         src={
-                          userProfile.imgUrl ||
+                          userProfile.img_url ||
                           `${process.env.NEXT_PUBLIC_USER_IMG}`
                         }
                         width={48}

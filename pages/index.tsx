@@ -1,41 +1,34 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { signIn, useSession, getSession } from "next-auth/client";
 import { FaGithub, FaDiscord, FaFacebookSquare } from "react-icons/fa";
 
 export default function Home() {
-  const [loading, setLoading] = useState(true);
+  const [session, loadingSession] = useSession();
   const router = useRouter();
-  const redirect_url = `${process.env.NEXT_PUBLIC_REDIRECT_URL}`;
   // const socket = io("http://localhost:5000");
   // socket.on("connect", () => {
   //   console.log(socket.id, "id socket");
   // });
 
-  const getProfile = async () => {
-    const profile = await getSession();
-    return profile;
-  };
-
   useEffect(() => {
-    getProfile().then((profile) => {
-      if (profile) return router.push("/message");
-      setLoading(false);
-    });
-  }, []);
-
-  // if (loading) {
-  //   return <p>Loading...</p>;
-  // }
+    if (localStorage.getItem("session.user")) {
+      router.push("/message");
+    }
+    if (session) {
+      localStorage.setItem("session.user", (session?.userId as string) || "");
+      router.push("/message");
+    }
+  }, [session, loadingSession]);
 
   return (
     <div>
       <Head>
         <title>Chat Skoot</title>
       </Head>
-      {!loading ? (
+      {!session && !loadingSession ? (
         <div className="max-w-screen-2xl w-11/12 mx-auto flex flex-row justify-between items-start h-full mt-14">
           <div>
             <p className="text-5xl text-red-500">Chat Skoot</p>
@@ -46,7 +39,7 @@ export default function Home() {
             <div
               onClick={() => {
                 signIn("google", {
-                  callbackUrl: redirect_url,
+                  redirect: false,
                 });
               }}
               className="bg-blue-500 border border-blue-500 mt-6 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
@@ -61,7 +54,7 @@ export default function Home() {
             <div
               onClick={() => {
                 signIn("facebook", {
-                  callbackUrl: redirect_url,
+                  redirect: false,
                 });
               }}
               className="bg-facebook border border-blue-500 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
@@ -76,7 +69,7 @@ export default function Home() {
             <div
               onClick={() => {
                 signIn("github", {
-                  callbackUrl: redirect_url,
+                  redirect: false,
                 });
               }}
               className="bg-gray-900 border border-gray-900 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
@@ -91,7 +84,7 @@ export default function Home() {
             <div
               onClick={() => {
                 signIn("discord", {
-                  callbackUrl: redirect_url,
+                  redirect: false,
                 });
               }}
               className="bg-indigo-700 border border-indigo-700 mt-3 text-white cursor-pointer rounded flex flex-row justify-between items-center w-64"
