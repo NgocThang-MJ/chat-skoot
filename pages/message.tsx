@@ -51,9 +51,6 @@ export default function Home() {
       socket.on("connect", () => {
         console.log(socket.id, "id socket");
       });
-      socket.on("disconnect", () => {
-        console.log("disconnect message");
-      });
     }
   }, [session, loadingSession]);
 

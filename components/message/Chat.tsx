@@ -2,6 +2,8 @@ import { useState, FormEvent, useEffect, useRef } from "react";
 import Image from "next/image";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
+import useSWR from "swr";
+import axios from "axios";
 
 import socket from "../../util/socket";
 
@@ -9,9 +11,7 @@ import {
   IMessage,
   IUserProfile,
   RoomMember,
-  ITyping,
 } from "../../interfaces/UserInterface";
-import axios from "axios";
 
 export default function Chat(props: {
   userProfile: IUserProfile;
@@ -75,20 +75,21 @@ export default function Chat(props: {
     setText("");
   };
 
-  const fetchMessages = async () => {
+  const fetchMessages = async (room_id: string) => {
+    if (!room_id) return;
     const response = await axios.get(
-      `${server_url}/api/rooms/messages/${roomId}`
+      `${server_url}/api/rooms/messages/${room_id}`
     );
     return response.data;
   };
 
+  const { data, error } = useSWR(roomId, fetchMessages);
+
   useEffect(() => {
     socket.on("typing", ({ image }) => {
-      console.log("typing");
       setTypingUser(typingUser.concat([image]));
     });
     socket.on("blur", ({ image }) => {
-      console.log("blur");
       setIsTyping(false);
       setTypingUser(typingUser.filter((img) => img !== image));
     });
@@ -104,12 +105,13 @@ export default function Chat(props: {
   }, [messages]);
 
   useEffect(() => {
-    if (!roomId) return;
-    fetchMessages().then((messages) => {
-      setMessages(messages);
-      chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
-    });
-  }, [roomId]);
+    if (data) {
+      setMessages(data);
+    }
+    if (error) {
+      console.log(error);
+    }
+  }, [data, error]);
 
   // Clean up
   useEffect(() => {

@@ -2,6 +2,7 @@ import { useEffect, useState, FormEvent } from "react";
 import Image from "next/image";
 import { BiSearch } from "react-icons/bi";
 import axios from "axios";
+import useSWR from "swr";
 
 import socket from "../../util/socket";
 
@@ -22,12 +23,14 @@ export default function Friend(props: {
   const [input, setInput] = useState("");
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
-  const fetchRooms = async () => {
-    const response = await axios.get(
-      `${server_url}/api/rooms/${userProfile.user_id}`
-    );
-    return response.data;
+  const fetchRooms = async (user_id: string) => {
+    if (!user_id) return;
+    const response = await axios.get(`${server_url}/api/rooms/${user_id}`);
+    const data: IRoom[] = response.data;
+    return data;
   };
+
+  const { data, error } = useSWR(userProfile.user_id, fetchRooms);
 
   const joinRoom = async (room: IRoom, talker: RoomMember) => {
     socket.emit("join room", room.room_socket_id);
@@ -49,14 +52,16 @@ export default function Friend(props: {
   }, [rooms]);
 
   useEffect(() => {
-    fetchRooms().then((rooms: IRoom[]) => {
-      rooms.forEach((room) => {
+    if (data) {
+      data.forEach((room) => {
         socket.emit("join room", room._id);
       });
-      setRooms(rooms);
-    });
-  }, []);
-
+      setRooms(data);
+    }
+    if (error) {
+      console.log(error);
+    }
+  }, [data, error]);
   return (
     <div className="w-64 flex-shrink-0 border-r border-gray-600 pr-5">
       <div className="">
