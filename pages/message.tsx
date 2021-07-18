@@ -19,6 +19,7 @@ export default function Home() {
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(true);
   const [roomId, setRoomId] = useState("");
+  const [roomSocketId, setRoomSocketId] = useState("");
   const [conversation, setConversation] = useState<RoomMember>();
   const [userProfile, setUserProfile] = useState<IUserProfile>({
     user_id: "",
@@ -49,6 +50,9 @@ export default function Home() {
       socket.connect();
       socket.on("connect", () => {
         console.log(socket.id, "id socket");
+      });
+      socket.on("disconnect", () => {
+        console.log("disconnect message");
       });
     }
   }, [session, loadingSession]);
@@ -99,12 +103,14 @@ export default function Home() {
               userProfile={userProfile}
               setConversation={setConversation}
               setRoomId={setRoomId}
+              setRoomSocketId={setRoomSocketId}
             />
 
             <Chat
               userProfile={userProfile}
               conversation={conversation}
               roomId={roomId}
+              roomSocketId={roomSocketId}
             />
 
             <Option userProfile={userProfile} setLoading={setLoading} />

@@ -17,8 +17,9 @@ export default function Chat(props: {
   userProfile: IUserProfile;
   conversation: RoomMember | undefined;
   roomId: string;
+  roomSocketId: string;
 }) {
-  const { conversation, roomId, userProfile } = props;
+  const { conversation, roomId, userProfile, roomSocketId } = props;
   const [text, setText] = useState("");
   const [typingUser, setTypingUser] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -33,19 +34,28 @@ export default function Chat(props: {
     setText(value);
     console.log(isTyping);
     if (!value) {
-      socket.emit("blur", { room_id: roomId, image: userProfile.img_url });
+      socket.emit("blur", {
+        room_socket_id: roomSocketId,
+        image: userProfile.img_url,
+      });
       setIsTyping(false);
     }
     if (value && document.activeElement === inputRef.current) {
       if (!isTyping) {
         setIsTyping(true);
-        socket.emit("typing", { room_id: roomId, image: userProfile.img_url });
+        socket.emit("typing", {
+          room_socket_id: roomSocketId,
+          image: userProfile.img_url,
+        });
       }
     }
   };
 
   const onBLur = () => {
-    socket.emit("blur", { room_id: roomId, image: userProfile.img_url });
+    socket.emit("blur", {
+      room_socket_id: roomSocketId,
+      image: userProfile.img_url,
+    });
     setIsTyping(false);
   };
 
@@ -56,8 +66,12 @@ export default function Chat(props: {
       content: text,
       sender_id: userProfile.user_id,
       room_id: roomId,
+      room_socket_id: roomSocketId,
     });
-    socket.emit("blur", { room_id: roomId, image: userProfile.img_url });
+    socket.emit("blur", {
+      room_socket_id: roomSocketId,
+      image: userProfile.img_url,
+    });
     setText("");
   };
 
@@ -96,6 +110,18 @@ export default function Chat(props: {
       chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
     });
   }, [roomId]);
+
+  // Clean up
+  useEffect(() => {
+    return function cleanup() {
+      console.log("quit");
+      socket.emit("leave room", { room_socket_id: roomSocketId });
+      socket.emit("blur", {
+        room_socket_id: roomSocketId,
+        image: userProfile.img_url,
+      });
+    };
+  }, []);
 
   return (
     <div className="flex-grow border-r border-gray-600 relative flex flex-col justify-between">

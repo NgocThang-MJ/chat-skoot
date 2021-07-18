@@ -44,7 +44,8 @@ export interface IFriend {
 export interface IRoom {
   _id: string;
   is_auto_create: boolean;
-  memberIds: Array<ObjectId>;
+  room_socket_id: string;
+  memberIds: string[];
   members: RoomMember[];
   last_msg: string;
   last_date_msg: Date;
