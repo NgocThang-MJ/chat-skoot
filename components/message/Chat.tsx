@@ -9,6 +9,7 @@ import {
   IMessage,
   IUserProfile,
   RoomMember,
+  ITyping,
 } from "../../interfaces/UserInterface";
 import axios from "axios";
 
@@ -19,9 +20,34 @@ export default function Chat(props: {
 }) {
   const { conversation, roomId, userProfile } = props;
   const [text, setText] = useState("");
+  const [typingUser, setTypingUser] = useState<string[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const onChange = (e: FormEvent<HTMLInputElement>) => {
+    const value = e.currentTarget.value;
+    console.log(value);
+    setText(value);
+    console.log(isTyping);
+    if (!value) {
+      socket.emit("blur", { room_id: roomId, image: userProfile.img_url });
+      setIsTyping(false);
+    }
+    if (value && document.activeElement === inputRef.current) {
+      if (!isTyping) {
+        setIsTyping(true);
+        socket.emit("typing", { room_id: roomId, image: userProfile.img_url });
+      }
+    }
+  };
+
+  const onBLur = () => {
+    socket.emit("blur", { room_id: roomId, image: userProfile.img_url });
+    setIsTyping(false);
+  };
 
   // Send message
   const onSend = (e: FormEvent<HTMLFormElement>) => {
@@ -31,6 +57,7 @@ export default function Chat(props: {
       sender_id: userProfile.user_id,
       room_id: roomId,
     });
+    socket.emit("blur", { room_id: roomId, image: userProfile.img_url });
     setText("");
   };
 
@@ -41,9 +68,17 @@ export default function Chat(props: {
     return response.data;
   };
 
-  // useEffect(() => {
-
-  // }, [])
+  useEffect(() => {
+    socket.on("typing", ({ image }) => {
+      console.log("typing");
+      setTypingUser(typingUser.concat([image]));
+    });
+    socket.on("blur", ({ image }) => {
+      console.log("blur");
+      setIsTyping(false);
+      setTypingUser(typingUser.filter((img) => img !== image));
+    });
+  }, [typingUser, isTyping]);
 
   useEffect(() => {
     socket.on("message", ({ _id, room_id, content, sender_id, createdAt }) => {
@@ -86,8 +121,20 @@ export default function Chat(props: {
           </div>
           <div
             ref={chatBoxRef}
-            className="flex flex-col-reverse flex-grow max-h-full overflow-y-auto px-4 py-2"
+            className="flex flex-col-reverse flex-grow max-h-full overflow-y-auto px-4 py-2 transition-all"
           >
+            {typingUser.length > 0 &&
+              typingUser.map((image, index) => (
+                <div className="flex items-center" key={index}>
+                  <Image
+                    src={image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <p className="ml-2 text-gray-500">is typing...</p>
+                </div>
+              ))}
             {messages.length > 0 &&
               messages.map((message) => (
                 <div
@@ -102,7 +149,7 @@ export default function Chat(props: {
                       message.sender_id === userProfile.user_id
                         ? "bg-red-600"
                         : "bg-gray-700"
-                    } px-3 py-1 rounded-2xl max-w-2/3 break-words`}
+                    } px-3 py-1 rounded-2xl max-w-2/3 break-words transition-all`}
                   >
                     {message.content}
                   </p>
@@ -117,8 +164,10 @@ export default function Chat(props: {
               <input
                 placeholder="Search"
                 className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-4 rounded-lg outline-none border-none"
-                onChange={(e) => setText(e.target.value)}
+                onChange={onChange}
+                onBlur={onBLur}
                 value={text}
+                ref={inputRef}
               />
               <button
                 type="submit"

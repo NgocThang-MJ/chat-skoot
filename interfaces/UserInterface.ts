@@ -57,3 +57,7 @@ export interface IMessage {
   sender_id: string;
   createdAt: Date;
 }
+
+export interface ITyping {
+  image: string;
+}
