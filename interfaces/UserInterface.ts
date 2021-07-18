@@ -1,3 +1,11 @@
+import { ObjectId } from "mongodb";
+
+export type RoomMember = {
+  id: string;
+  name: string;
+  image: string;
+};
+
 export interface IUserProfile {
   user_id: string;
   email: string;
@@ -31,4 +39,21 @@ export interface IFriend {
   name: string;
   _id: string;
   image: string;
+}
+
+export interface IRoom {
+  _id: string;
+  is_auto_create: boolean;
+  memberIds: Array<ObjectId>;
+  members: RoomMember[];
+  last_msg: string;
+  last_date_msg: Date;
+}
+
+export interface IMessage {
+  _id: string;
+  room_id: string;
+  content: string;
+  sender_id: string;
+  createdAt: Date;
 }

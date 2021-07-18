@@ -1,24 +1,25 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
 import { useSession, signOut } from "next-auth/client";
 import useSWR from "swr";
 import axios from "axios";
 
-import Friends from "../components/message/Friends";
+import Rooms from "../components/message/Rooms";
 import Chat from "../components/message/Chat";
 import Option from "../components/message/Option";
 
 import socket from "../util/socket";
 
-import { IUserProfile } from "../interfaces/UserInterface";
+import { IUserProfile, RoomMember } from "../interfaces/UserInterface";
 
 export default function Home() {
   const router = useRouter();
   const [session, loadingSession] = useSession();
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(true);
+  const [roomId, setRoomId] = useState("");
+  const [conversation, setConversation] = useState<RoomMember>();
   const [userProfile, setUserProfile] = useState<IUserProfile>({
     user_id: "",
     username: "",
@@ -32,7 +33,6 @@ export default function Home() {
 
   const fetcher = async (url: string, id: string) => {
     if (!id) return;
-    console.log(id);
     const response = await axios.get(`${url}/${id}`);
     return response.data;
   };
@@ -44,6 +44,12 @@ export default function Home() {
     if (!session && !loadingSession) {
       localStorage.removeItem("session.user");
       router.push("/");
+    }
+    if (session) {
+      socket.connect();
+      socket.on("connect", () => {
+        console.log(socket.id, "id socket");
+      });
     }
   }, [session, loadingSession]);
 
@@ -89,9 +95,17 @@ export default function Home() {
             <title>Chat Skoot</title>
           </Head>
           <div className="flex mx-5 h-full text-white pt-4">
-            <Friends userProfile={userProfile} />
+            <Rooms
+              userProfile={userProfile}
+              setConversation={setConversation}
+              setRoomId={setRoomId}
+            />
 
-            <Chat userProfile={userProfile} />
+            <Chat
+              userProfile={userProfile}
+              conversation={conversation}
+              roomId={roomId}
+            />
 
             <Option userProfile={userProfile} setLoading={setLoading} />
           </div>

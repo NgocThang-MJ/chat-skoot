@@ -64,7 +64,11 @@ export default function Profile() {
     try {
       await axios.post(`${server_url}/api/users/approve-request`, {
         user_id: userProfile.user_id,
-        friendId: anotherProfile.user_id,
+        friend_id: anotherProfile.user_id,
+        user_image: userProfile.img_url,
+        friend_image: anotherProfile.img_url,
+        user_name: userProfile.username,
+        friend_name: anotherProfile.name,
       });
       setUserProfile({
         ...userProfile,
@@ -107,6 +111,8 @@ export default function Profile() {
           user_id: profile?.user_id as string,
           friend_requests: (profile?.friend_requests as Array<string>) || [],
           friends: profile?.friends as Array<string>,
+          img_url: (profile?.user?.image as string) || "",
+          username: profile?.user?.name || "",
         });
         setLoading(false);
       })

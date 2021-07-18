@@ -17,6 +17,9 @@ export default function Home() {
     if (localStorage.getItem("session.user")) {
       router.push("/message");
     }
+  }, []);
+
+  useEffect(() => {
     if (session) {
       localStorage.setItem("session.user", (session?.user_id as string) || "");
       router.push("/message");
