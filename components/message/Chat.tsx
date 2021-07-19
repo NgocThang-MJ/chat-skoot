@@ -6,6 +6,7 @@ import { GrEmoji } from "react-icons/gr";
 import axios from "axios";
 import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
+import { v4 as uuidv4 } from "uuid";
 
 import socket from "../../util/socket";
 
@@ -230,13 +231,13 @@ export default function Chat(props: {
                     message.sender_id === userProfile.user_id &&
                     "flex-row-reverse"
                   } mb-2 transition-all`}
-                  key={index}
+                  key={uuidv4()}
                 >
                   <p
                     className={`${
-                      message.sender_id === userProfile.user_id
-                        ? "bg-red-600"
-                        : "bg-gray-700"
+                      message.sender_id !== userProfile.user_id
+                        ? "bg-gray-700"
+                        : "bg-red-600"
                     } px-3 py-1 rounded-2xl max-w-2/3 break-words transition-all`}
                   >
                     {message.content}
