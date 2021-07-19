@@ -29,6 +29,7 @@ export default function Chat(props: {
   // const [typingUser, setTypingUser] = useState<string[]>([]);
   // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [loadingMsg, setLoadingMsg] = useState(true);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -149,8 +150,10 @@ export default function Chat(props: {
 
   useEffect(() => {
     if (!room) return;
+    setLoadingMsg(true);
     fetchMessages(room._id).then((data) => {
       setMessages(data);
+      setLoadingMsg(false);
     });
     chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   }, [room]);
@@ -224,8 +227,9 @@ export default function Chat(props: {
                   <p className="ml-2 text-gray-500">is typing...</p>
                 </div>
               ))} */}
-            {messages.length > 0 &&
-              messages.map((message, index) => (
+            {!loadingMsg &&
+              messages.length > 0 &&
+              messages.map((message) => (
                 <div
                   className={`flex ${
                     message.sender_id === userProfile.user_id &&
