@@ -72,6 +72,9 @@ export default function Chat(props: {
       room_socket_id: roomSocketId,
       image: userProfile.img_url,
     });
+    setMessages(
+      [{ content: text, sender_id: userProfile.user_id }].concat(messages)
+    );
     setText("");
   };
 
@@ -96,10 +99,8 @@ export default function Chat(props: {
   }, [typingUser, isTyping]);
 
   useEffect(() => {
-    socket.on("message", ({ _id, room_id, content, sender_id, createdAt }) => {
-      setMessages(
-        [{ _id, room_id, content, sender_id, createdAt }].concat(messages)
-      );
+    socket.on("message", ({ content, sender_id }) => {
+      setMessages([{ content, sender_id }].concat(messages));
       chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
     });
   }, [messages]);
@@ -164,13 +165,13 @@ export default function Chat(props: {
                 </div>
               ))}
             {messages.length > 0 &&
-              messages.map((message) => (
+              messages.map((message, index) => (
                 <div
                   className={`flex ${
                     message.sender_id === userProfile.user_id &&
                     "flex-row-reverse"
                   } mb-2`}
-                  key={message._id}
+                  key={index}
                 >
                   <p
                     className={`${

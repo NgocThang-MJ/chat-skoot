@@ -52,11 +52,11 @@ export interface IRoom {
 }
 
 export interface IMessage {
-  _id: string;
-  room_id: string;
+  // _id: string;
+  // room_id: string;
   content: string;
   sender_id: string;
-  createdAt: Date;
+  // createdAt: Date;
 }
 
 export interface ITyping {
