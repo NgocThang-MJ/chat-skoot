@@ -3,6 +3,7 @@ import Image from "next/image";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import axios from "axios";
+import { debounce } from "lodash";
 
 import socket from "../../util/socket";
 
@@ -57,24 +58,45 @@ export default function Chat(props: {
     setIsTyping(false);
   };
 
-  const emitTyping = (e: FormEvent<HTMLInputElement>) => {
-    const value = e.currentTarget.value;
+  const emitTyping = (
+    value: string,
+    isTyping: boolean,
+    room_socket_id: string
+  ) => {
     console.log(value);
+    console.log(!value);
     if (!value) {
+      console.log("emit blur");
       socket.emit("blur", {
-        room_socket_id: roomSocketId,
+        room_socket_id,
         user_id: userProfile.user_id,
       });
       setIsTyping(false);
     } else {
       if (!isTyping) {
         setIsTyping(true);
+        console.log("emit typing");
         socket.emit("typing", {
-          room_socket_id: roomSocketId,
+          room_socket_id,
           user_id: userProfile.user_id,
         });
+        console.log("emitted typing");
       }
     }
+  };
+
+  const debouncedEmitTyping = useRef(
+    debounce(
+      (value, isTyping, room_socket_id) =>
+        emitTyping(value, isTyping, room_socket_id),
+      300
+    )
+  ).current;
+
+  const onKeyUp = (e: FormEvent<HTMLInputElement>) => {
+    const value = e.currentTarget.value;
+    console.log(value);
+    debouncedEmitTyping(value, isTyping, roomSocketId);
   };
 
   // Send message
@@ -110,6 +132,7 @@ export default function Chat(props: {
 
   useEffect(() => {
     socket.on("typing", ({ user_id }) => {
+      console.log(user_id + "typing");
       setTypingUser(typingUser.concat([user_id]));
     });
     socket.on("blur", ({ user_id }) => {
@@ -231,7 +254,7 @@ export default function Chat(props: {
                 className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-4 rounded-lg outline-none border-none"
                 onChange={onChange}
                 onBlur={onBLur}
-                onKeyUp={emitTyping}
+                onKeyUp={onKeyUp}
                 value={text}
                 ref={inputRef}
               />
