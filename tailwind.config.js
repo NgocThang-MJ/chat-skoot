@@ -10,7 +10,7 @@ module.exports = {
         facebook: "#4268B3",
       },
       maxWidth: {
-        24: "6rem",
+        10: "2.5rem",
         "2/3": "66.6667%",
       },
     },

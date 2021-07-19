@@ -3,6 +3,8 @@ import Image from "next/image";
 import { BiSearch } from "react-icons/bi";
 import axios from "axios";
 import useSWR from "swr";
+// import TimeAgo from "react-timeago";
+import TimeAgo from "timeago-react";
 
 import socket from "../../util/socket";
 
@@ -105,14 +107,12 @@ export default function Friend(props: {
                     {talker.name}
                   </p>
                   <div>
-                    <span className="text-gray-500 overflow-ellipsis max-w-24 overflow-hidden inline-block">
+                    <span className="text-gray-500 overflow-ellipsis max-w-10 overflow-hidden inline-block">
                       {room.last_msg}
                     </span>
                     <span className="text-gray-500 ml-2 overflow-ellipsis inline-block overflow-hidden">
-                      {
-                        // new Date(room.last_date_msg).getDate()
-                      }
-                      &middot; wed
+                      &middot;{" "}
+                      <TimeAgo datetime={room.last_date_msg} live={false} />
                     </span>
                   </div>
                 </div>
