@@ -11,14 +11,14 @@ import Option from "../components/message/Option";
 
 import socket from "../util/socket";
 
-import { IUserProfile, RoomMember } from "../interfaces/UserInterface";
+import { IUserProfile, RoomMember, IRoom } from "../interfaces/UserInterface";
 
 export default function Home() {
   const router = useRouter();
   const [session, loadingSession] = useSession();
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [roomId, setRoomId] = useState("");
+  const [room, setRoom] = useState<IRoom>();
   const [roomSocketId, setRoomSocketId] = useState("");
   const [conversation, setConversation] = useState<RoomMember>();
   const [userProfile, setUserProfile] = useState<IUserProfile>({
@@ -99,14 +99,14 @@ export default function Home() {
             <Rooms
               userProfile={userProfile}
               setConversation={setConversation}
-              setRoomId={setRoomId}
+              setRoom={setRoom}
               setRoomSocketId={setRoomSocketId}
             />
 
             <Chat
               userProfile={userProfile}
               conversation={conversation}
-              roomId={roomId}
+              room={room}
               roomSocketId={roomSocketId}
             />
 

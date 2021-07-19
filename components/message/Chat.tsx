@@ -10,15 +10,16 @@ import {
   IMessage,
   IUserProfile,
   RoomMember,
+  IRoom,
 } from "../../interfaces/UserInterface";
 
 export default function Chat(props: {
   userProfile: IUserProfile;
   conversation: RoomMember | undefined;
-  roomId: string;
+  room: IRoom | undefined;
   roomSocketId: string;
 }) {
-  const { conversation, roomId, userProfile, roomSocketId } = props;
+  const { conversation, room, userProfile, roomSocketId } = props;
   const [text, setText] = useState("");
   const [typingUser, setTypingUser] = useState<string[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -30,45 +31,66 @@ export default function Chat(props: {
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
     setText(value);
-    if (!value) {
-      socket.emit("blur", {
-        room_socket_id: roomSocketId,
-        image: userProfile.img_url,
-      });
-      setIsTyping(false);
-    }
-    if (value && document.activeElement === inputRef.current) {
-      if (!isTyping) {
-        setIsTyping(true);
-        socket.emit("typing", {
-          room_socket_id: roomSocketId,
-          image: userProfile.img_url,
-        });
-      }
-    }
+    // if (!value) {
+    //   socket.emit("blur", {
+    //     room_socket_id: roomSocketId,
+    //     image: userProfile.img_url,
+    //   });
+    //   setIsTyping(false);
+    // }
+    // if (value && document.activeElement === inputRef.current) {
+    //   if (!isTyping) {
+    //     setIsTyping(true);
+    //     socket.emit("typing", {
+    //       room_socket_id: roomSocketId,
+    //       image: userProfile.img_url,
+    //     });
+    //   }
+    // }
   };
 
   const onBLur = () => {
     socket.emit("blur", {
       room_socket_id: roomSocketId,
-      image: userProfile.img_url,
+      user_id: userProfile.user_id,
     });
     setIsTyping(false);
+  };
+
+  const emitTyping = (e: FormEvent<HTMLInputElement>) => {
+    const value = e.currentTarget.value;
+    console.log(value);
+    if (!value) {
+      socket.emit("blur", {
+        room_socket_id: roomSocketId,
+        user_id: userProfile.user_id,
+      });
+      setIsTyping(false);
+    } else {
+      if (!isTyping) {
+        setIsTyping(true);
+        socket.emit("typing", {
+          room_socket_id: roomSocketId,
+          user_id: userProfile.user_id,
+        });
+      }
+    }
   };
 
   // Send message
   const onSend = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!text) return;
+    if (!room) return;
     socket.emit("message", {
       content: text,
       sender_id: userProfile.user_id,
-      room_id: roomId,
+      room_id: room._id,
       room_socket_id: roomSocketId,
     });
     socket.emit("blur", {
       room_socket_id: roomSocketId,
-      image: userProfile.img_url,
+      user_id: userProfile.user_id,
     });
     setMessages((oldMessages) => [
       { content: text, sender_id: userProfile.user_id },
@@ -87,12 +109,12 @@ export default function Chat(props: {
   };
 
   useEffect(() => {
-    socket.on("typing", ({ image }) => {
-      setTypingUser(typingUser.concat([image]));
+    socket.on("typing", ({ user_id }) => {
+      setTypingUser(typingUser.concat([user_id]));
     });
-    socket.on("blur", ({ image }) => {
+    socket.on("blur", ({ user_id }) => {
       setIsTyping(false);
-      setTypingUser(typingUser.filter((img) => img !== image));
+      setTypingUser(typingUser.filter((id) => id !== user_id));
     });
   }, [typingUser, isTyping]);
 
@@ -104,11 +126,12 @@ export default function Chat(props: {
   }, [messages]);
 
   useEffect(() => {
-    fetchMessages(roomId).then((data) => {
+    if (!room) return;
+    fetchMessages(room._id).then((data) => {
       setMessages(data);
     });
     chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
-  }, [roomId]);
+  }, [room]);
 
   // Clean up
   useEffect(() => {
@@ -148,7 +171,24 @@ export default function Chat(props: {
             ref={chatBoxRef}
             className="flex flex-col-reverse flex-grow max-h-full overflow-y-auto px-4 py-2 transition-all"
           >
-            {typingUser.length > 0 &&
+            {room &&
+              room?.members.map((member) => (
+                <div
+                  className={`flex items-center ${
+                    typingUser.includes(member.id) ? "block" : "hidden"
+                  }`}
+                  key={member.id}
+                >
+                  <Image
+                    src={member.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <p className="ml-2 text-gray-500">is typing...</p>
+                </div>
+              ))}
+            {/* {typingUser.length > 0 &&
               typingUser.map((image, index) => (
                 <div className="flex items-center" key={index}>
                   <Image
@@ -159,7 +199,7 @@ export default function Chat(props: {
                   />
                   <p className="ml-2 text-gray-500">is typing...</p>
                 </div>
-              ))}
+              ))} */}
             {messages.length > 0 &&
               messages.map((message, index) => (
                 <div
@@ -191,6 +231,7 @@ export default function Chat(props: {
                 className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-4 rounded-lg outline-none border-none"
                 onChange={onChange}
                 onBlur={onBLur}
+                onKeyUp={emitTyping}
                 value={text}
                 ref={inputRef}
               />

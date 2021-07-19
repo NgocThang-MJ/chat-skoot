@@ -15,7 +15,7 @@ import {
 export default function Friend(props: {
   userProfile: IUserProfile;
   setConversation: Function;
-  setRoomId: Function;
+  setRoom: Function;
   setRoomSocketId: Function;
 }) {
   const userProfile = props.userProfile;
@@ -34,7 +34,7 @@ export default function Friend(props: {
 
   const joinRoom = async (room: IRoom, talker: RoomMember) => {
     socket.emit("join room", room.room_socket_id);
-    props.setRoomId(room._id);
+    props.setRoom(room);
     props.setRoomSocketId(room.room_socket_id);
     props.setConversation({
       id: talker.id,
