@@ -59,6 +59,7 @@ export default function Chat(props: {
   // Send message
   const onSend = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!text) return;
     socket.emit("message", {
       content: text,
       sender_id: userProfile.user_id,
@@ -69,10 +70,12 @@ export default function Chat(props: {
       room_socket_id: roomSocketId,
       image: userProfile.img_url,
     });
-    setMessages(
-      [{ content: text, sender_id: userProfile.user_id }].concat(messages)
-    );
+    setMessages((oldMessages) => [
+      { content: text, sender_id: userProfile.user_id },
+      ...oldMessages,
+    ]);
     setText("");
+    setIsTyping(false);
     chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   };
 
@@ -95,7 +98,7 @@ export default function Chat(props: {
 
   useEffect(() => {
     socket.on("message", ({ content, sender_id }) => {
-      setMessages([{ content, sender_id }].concat(messages));
+      setMessages([{ content, sender_id }, ...messages]);
       console.log("sent");
     });
   }, [messages]);
@@ -163,7 +166,7 @@ export default function Chat(props: {
                   className={`flex ${
                     message.sender_id === userProfile.user_id &&
                     "flex-row-reverse"
-                  } mb-2`}
+                  } mb-2 transition-all`}
                   key={index}
                 >
                   <p
