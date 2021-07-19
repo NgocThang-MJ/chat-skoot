@@ -22,8 +22,8 @@ export default function Chat(props: {
 }) {
   const { conversation, room, userProfile, roomSocketId } = props;
   const [text, setText] = useState("");
-  const [typingUser, setTypingUser] = useState<string[]>([]);
-  const [isTyping, setIsTyping] = useState(false);
+  // const [typingUser, setTypingUser] = useState<string[]>([]);
+  // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -32,72 +32,56 @@ export default function Chat(props: {
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
     setText(value);
-    // if (!value) {
-    //   socket.emit("blur", {
-    //     room_socket_id: roomSocketId,
-    //     image: userProfile.img_url,
-    //   });
-    //   setIsTyping(false);
-    // }
-    // if (value && document.activeElement === inputRef.current) {
-    //   if (!isTyping) {
-    //     setIsTyping(true);
-    //     socket.emit("typing", {
-    //       room_socket_id: roomSocketId,
-    //       image: userProfile.img_url,
-    //     });
-    //   }
-    // }
   };
 
-  const onBLur = () => {
-    socket.emit("blur", {
-      room_socket_id: roomSocketId,
-      user_id: userProfile.user_id,
-    });
-    setIsTyping(false);
-  };
+  // const onBLur = () => {
+  //   socket.emit("blur", {
+  //     room_socket_id: roomSocketId,
+  //     user_id: userProfile.user_id,
+  //   });
+  //   setIsTyping(false);
+  // };
 
-  const emitTyping = (
-    value: string,
-    isTyping: boolean,
-    room_socket_id: string
-  ) => {
-    console.log(value);
-    console.log(!value);
-    if (!value) {
-      console.log("emit blur");
-      socket.emit("blur", {
-        room_socket_id,
-        user_id: userProfile.user_id,
-      });
-      setIsTyping(false);
-    } else {
-      if (!isTyping) {
-        setIsTyping(true);
-        console.log("emit typing");
-        socket.emit("typing", {
-          room_socket_id,
-          user_id: userProfile.user_id,
-        });
-        console.log("emitted typing");
-      }
-    }
-  };
+  // const emitTyping = (
+  //   value: string,
+  //   isTyping: boolean,
+  //   room_socket_id: string
+  // ) => {
+  //   console.log(value);
+  //   console.log(!value);
+  //   if (!value) {
+  //     console.log("emit blur");
+  //     socket.emit("blur", {
+  //       room_socket_id,
+  //       user_id: userProfile.user_id,
+  //     });
+  //     setIsTyping(false);
+  //   } else {
+  //     if (!isTyping) {
+  //       setIsTyping(true);
+  //       console.log("emit typing");
+  //       socket.emit("typing", {
+  //         room_socket_id,
+  //         user_id: userProfile.user_id,
+  //       });
+  //       console.log("emitted typing");
+  //     }
+  //   }
+  // };
 
-  const debouncedEmitTyping = useRef(
-    debounce(
-      (value, isTyping, room_socket_id) =>
-        emitTyping(value, isTyping, room_socket_id),
-      300
-    )
-  ).current;
+  // const debouncedEmitTyping = useRef(
+  //   debounce(
+  //     (value, isTyping, room_socket_id) =>
+  //       emitTyping(value, isTyping, room_socket_id),
+  //     300
+  //   )
+  // ).current;
 
-  const onKeyUp = (e: FormEvent<HTMLInputElement>) => {
-    const value = e.currentTarget.value;
-    console.log(value);
-    debouncedEmitTyping(value, isTyping, roomSocketId);
-  };
+  // const onKeyUp = (e: FormEvent<HTMLInputElement>) => {
+  //   const value = e.currentTarget.value;
+  //   console.log(value);
+  //   debouncedEmitTyping(value, isTyping, roomSocketId);
+  // };
 
   // Send message
   const onSend = (e: FormEvent<HTMLFormElement>) => {
@@ -110,16 +94,16 @@ export default function Chat(props: {
       room_id: room._id,
       room_socket_id: roomSocketId,
     });
-    socket.emit("blur", {
-      room_socket_id: roomSocketId,
-      user_id: userProfile.user_id,
-    });
+    // socket.emit("blur", {
+    //   room_socket_id: roomSocketId,
+    //   user_id: userProfile.user_id,
+    // });
     setMessages((oldMessages) => [
       { content: text, sender_id: userProfile.user_id },
       ...oldMessages,
     ]);
     setText("");
-    setIsTyping(false);
+    // setIsTyping(false);
     chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   };
 
@@ -130,21 +114,20 @@ export default function Chat(props: {
     return response.data;
   };
 
-  useEffect(() => {
-    socket.on("typing", ({ user_id }) => {
-      console.log(user_id + "typing");
-      setTypingUser(typingUser.concat([user_id]));
-    });
-    socket.on("blur", ({ user_id }) => {
-      setIsTyping(false);
-      setTypingUser(typingUser.filter((id) => id !== user_id));
-    });
-  }, [typingUser, isTyping]);
+  // useEffect(() => {
+  //   socket.on("typing", ({ user_id }) => {
+  //     console.log(user_id + "typing");
+  //     setTypingUser(typingUser.concat([user_id]));
+  //   });
+  //   socket.on("blur", ({ user_id }) => {
+  //     setIsTyping(false);
+  //     setTypingUser(typingUser.filter((id) => id !== user_id));
+  //   });
+  // }, [typingUser, isTyping]);
 
   useEffect(() => {
     socket.on("message", ({ content, sender_id }) => {
       setMessages([{ content, sender_id }, ...messages]);
-      console.log("sent");
     });
   }, [messages]);
 
@@ -157,16 +140,16 @@ export default function Chat(props: {
   }, [room]);
 
   // Clean up
-  useEffect(() => {
-    return function cleanup() {
-      console.log("quit");
-      socket.emit("leave room", { room_socket_id: roomSocketId });
-      socket.emit("blur", {
-        room_socket_id: roomSocketId,
-        image: userProfile.img_url,
-      });
-    };
-  }, []);
+  // useEffect(() => {
+  //   return function cleanup() {
+  //     console.log("quit");
+  //     socket.emit("leave room", { room_socket_id: roomSocketId });
+  //     socket.emit("blur", {
+  //       room_socket_id: roomSocketId,
+  //       image: userProfile.img_url,
+  //     });
+  //   };
+  // }, []);
 
   return (
     <div className="flex-grow border-r border-gray-600 relative flex flex-col justify-between">
@@ -194,7 +177,7 @@ export default function Chat(props: {
             ref={chatBoxRef}
             className="flex flex-col-reverse flex-grow max-h-full overflow-y-auto px-4 py-2 transition-all"
           >
-            {room &&
+            {/* {room &&
               room?.members.map((member) => (
                 <div
                   className={`flex items-center ${
@@ -204,18 +187,6 @@ export default function Chat(props: {
                 >
                   <Image
                     src={member.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                  <p className="ml-2 text-gray-500">is typing...</p>
-                </div>
-              ))}
-            {/* {typingUser.length > 0 &&
-              typingUser.map((image, index) => (
-                <div className="flex items-center" key={index}>
-                  <Image
-                    src={image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
                     width={32}
                     height={32}
                     className="rounded-full"
@@ -253,8 +224,8 @@ export default function Chat(props: {
                 placeholder="Search"
                 className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-4 rounded-lg outline-none border-none"
                 onChange={onChange}
-                onBlur={onBLur}
-                onKeyUp={onKeyUp}
+                // onBlur={onBLur}
+                // onKeyUp={onKeyUp}
                 value={text}
                 ref={inputRef}
               />
