@@ -224,7 +224,7 @@ export default function Option(props: {
 
       <div className="mt-5 relative">
         <form
-          className="bg-gray-600 rounded mr-5 mt-3 items-center hidden md:flex"
+          className="flex bg-gray-600 rounded mr-5 mt-3 items-center"
           onSubmit={(e: FormEvent<HTMLFormElement>) => e.preventDefault()}
         >
           <button type="submit" className="px-2">

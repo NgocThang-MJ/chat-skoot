@@ -1,9 +1,11 @@
-import { useState, FormEvent, useEffect, useRef } from "react";
+import { useState, FormEvent, useEffect, useRef, KeyboardEvent } from "react";
 import Image from "next/image";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
+import { GrEmoji } from "react-icons/gr";
 import axios from "axios";
-import { debounce } from "lodash";
+import "emoji-mart/css/emoji-mart.css";
+import { Picker } from "emoji-mart";
 
 import socket from "../../util/socket";
 
@@ -22,16 +24,53 @@ export default function Chat(props: {
 }) {
   const { conversation, room, userProfile, roomSocketId } = props;
   const [text, setText] = useState("");
+  const [showEmoji, setShowEmoji] = useState(false);
   // const [typingUser, setTypingUser] = useState<string[]>([]);
   // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const emojiRef = useRef<HTMLDivElement>(null);
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
     setText(value);
+  };
+
+  const addEmoji = (e: any) => {
+    console.log(e);
+    if (e.native) {
+      setText(text + e.native);
+    }
+  };
+
+  const senMsg = () => {
+    if (!text) return;
+    if (!room) return;
+    socket.emit("message", {
+      content: text,
+      sender_id: userProfile.user_id,
+      room_id: room._id,
+      room_socket_id: roomSocketId,
+    });
+    // socket.emit("blur", {
+    //   room_socket_id: roomSocketId,
+    //   user_id: userProfile.user_id,
+    // });
+    setMessages((oldMessages) => [
+      { content: text, sender_id: userProfile.user_id },
+      ...oldMessages,
+    ]);
+    setText("");
+    // setIsTyping(false);
+    chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
+  };
+
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      senMsg();
+    }
   };
 
   // const onBLur = () => {
@@ -83,30 +122,6 @@ export default function Chat(props: {
   //   debouncedEmitTyping(value, isTyping, roomSocketId);
   // };
 
-  // Send message
-  const onSend = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!text) return;
-    if (!room) return;
-    socket.emit("message", {
-      content: text,
-      sender_id: userProfile.user_id,
-      room_id: room._id,
-      room_socket_id: roomSocketId,
-    });
-    // socket.emit("blur", {
-    //   room_socket_id: roomSocketId,
-    //   user_id: userProfile.user_id,
-    // });
-    setMessages((oldMessages) => [
-      { content: text, sender_id: userProfile.user_id },
-      ...oldMessages,
-    ]);
-    setText("");
-    // setIsTyping(false);
-    chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
-  };
-
   const fetchMessages = async (room_id: string) => {
     const response = await axios.get(
       `${server_url}/api/rooms/messages/${room_id}`
@@ -138,6 +153,20 @@ export default function Chat(props: {
     });
     chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   }, [room]);
+
+  // Event click outside
+  useEffect(() => {
+    function handleClickOutsideEmoji(e: any) {
+      if (!showEmoji) return;
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+        setShowEmoji(false);
+      }
+    }
+    window.addEventListener("click", handleClickOutsideEmoji);
+    return () => {
+      window.removeEventListener("click", handleClickOutsideEmoji);
+    };
+  }, [showEmoji]);
 
   // Clean up
   // useEffect(() => {
@@ -216,25 +245,45 @@ export default function Chat(props: {
               ))}
           </div>
           <div className="w-full mb-3 flex-shrink-0">
-            <form
-              onSubmit={onSend}
-              className="rounded-lg items-center hidden md:flex mx-3"
-            >
+            <form className="flex rounded-lg items-center mx-3">
               <input
                 placeholder="Search"
-                className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-4 rounded-lg outline-none border-none"
+                className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-2 rounded-lg outline-none border-none"
                 onChange={onChange}
                 // onBlur={onBLur}
                 // onKeyUp={onKeyUp}
+                onKeyDown={onKeyDown}
                 value={text}
                 ref={inputRef}
               />
-              <button
-                type="submit"
-                className="px-2 hover:bg-gray-600 rounded-full h-9 transition"
+              <div className="relative mx-1">
+                <div
+                  onClick={() => setShowEmoji(!showEmoji)}
+                  className="hover:bg-gray-600 p-2 cursor-pointer rounded-2xl"
+                >
+                  <GrEmoji className="h-6 w-6" />
+                </div>
+                <div
+                  className={`${
+                    !showEmoji && "hidden"
+                  } absolute bottom-10 -left-full z-20`}
+                  ref={emojiRef}
+                >
+                  <Picker
+                    onSelect={addEmoji}
+                    theme="dark"
+                    title="Chat Skoot"
+                    emoji="speech_balloon"
+                    set="facebook"
+                  />
+                </div>
+              </div>
+              <div
+                onClick={() => senMsg()}
+                className="flex items-center cursor-pointer p-2 hover:bg-gray-600 rounded-2xl"
               >
                 <IoMdSend className="h-6 w-6 text-green-500" />
-              </button>
+              </div>
             </form>
           </div>
         </>

@@ -67,7 +67,7 @@ export default function Friend(props: {
       <div className="">
         <p className="text-xl">Friends</p>
         <form
-          className="bg-gray-600 rounded mt-3 items-center hidden md:flex"
+          className="flex bg-gray-600 rounded mt-3 items-center"
           onSubmit={(e: FormEvent<HTMLFormElement>) => e.preventDefault()}
         >
           <button type="submit" className="px-2">
