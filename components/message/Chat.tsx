@@ -98,7 +98,7 @@ export default function Chat(props: {
 
   useEffect(() => {
     socket.on("message", ({ content, sender_id }) => {
-      setMessages([{ content, sender_id }, ...messages]);
+      setMessages((oldMessages) => [{ content, sender_id }, ...oldMessages]);
       console.log("sent");
     });
   }, [messages]);
