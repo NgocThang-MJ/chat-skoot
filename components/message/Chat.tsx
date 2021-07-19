@@ -2,7 +2,6 @@ import { useState, FormEvent, useEffect, useRef } from "react";
 import Image from "next/image";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
-import useSWR from "swr";
 import axios from "axios";
 
 import socket from "../../util/socket";
@@ -30,9 +29,7 @@ export default function Chat(props: {
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
-    console.log(value);
     setText(value);
-    console.log(isTyping);
     if (!value) {
       socket.emit("blur", {
         room_socket_id: roomSocketId,
@@ -76,17 +73,15 @@ export default function Chat(props: {
       [{ content: text, sender_id: userProfile.user_id }].concat(messages)
     );
     setText("");
+    chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   };
 
   const fetchMessages = async (room_id: string) => {
-    if (!room_id) return;
     const response = await axios.get(
       `${server_url}/api/rooms/messages/${room_id}`
     );
     return response.data;
   };
-
-  const { data, error } = useSWR(roomId, fetchMessages);
 
   useEffect(() => {
     socket.on("typing", ({ image }) => {
@@ -101,18 +96,16 @@ export default function Chat(props: {
   useEffect(() => {
     socket.on("message", ({ content, sender_id }) => {
       setMessages([{ content, sender_id }].concat(messages));
-      chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
+      console.log("sent");
     });
   }, [messages]);
 
   useEffect(() => {
-    if (data) {
+    fetchMessages(roomId).then((data) => {
       setMessages(data);
-    }
-    if (error) {
-      console.log(error);
-    }
-  }, [data, error]);
+    });
+    chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
+  }, [roomId]);
 
   // Clean up
   useEffect(() => {
