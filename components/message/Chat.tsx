@@ -146,7 +146,7 @@ export default function Chat(props: {
   const call = async () => {
     console.log("call");
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: false,
       audio: true,
     });
     console.log("get user media");
@@ -154,7 +154,7 @@ export default function Chat(props: {
     setCalling(true);
 
     const peer = new Peer({
-      initiator: false,
+      initiator: true,
       trickle: false,
       stream: stream,
     });
