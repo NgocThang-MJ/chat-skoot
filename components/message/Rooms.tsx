@@ -3,7 +3,6 @@ import Image from "next/image";
 import { BiSearch } from "react-icons/bi";
 import axios from "axios";
 import useSWR from "swr";
-// import TimeAgo from "react-timeago";
 import TimeAgo from "timeago-react";
 
 import socket from "../../util/socket";
@@ -55,9 +54,8 @@ export default function Friend(props: {
 
   useEffect(() => {
     if (data) {
-      data.forEach((room) => {
-        socket.emit("join room", room._id);
-      });
+      const ids = data.map((room) => room._id);
+      socket.emit("join room", ids);
       setRooms(data);
     }
     if (error) {
