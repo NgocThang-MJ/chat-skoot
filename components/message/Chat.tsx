@@ -154,7 +154,7 @@ export default function Chat(props: {
     setCalling(true);
 
     const peer = new Peer({
-      initiator: true,
+      initiator: false,
       trickle: false,
       stream: stream,
     });
@@ -185,7 +185,7 @@ export default function Chat(props: {
 
   const answer = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: false,
       audio: true,
     });
 
