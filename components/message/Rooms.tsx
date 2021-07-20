@@ -22,6 +22,7 @@ export default function Friend(props: {
   const userProfile = props.userProfile;
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const fetchRooms = async (user_id: string) => {
@@ -34,7 +35,7 @@ export default function Friend(props: {
   const { data, error } = useSWR(userProfile.user_id, fetchRooms);
 
   const joinRoom = async (room: IRoom, talker: RoomMember) => {
-    socket.emit("join room", room.room_socket_id);
+    socket.emit("join conversation", room.room_socket_id);
     props.setRoom(room);
     props.setRoomSocketId(room.room_socket_id);
     props.setConversation({
@@ -53,15 +54,34 @@ export default function Friend(props: {
   }, [rooms]);
 
   useEffect(() => {
+    socket.on("joined room", (online_ids) => {
+      setOnlineUsers(online_ids);
+    });
+    socket.on("leave room", (user_id) => {
+      setOnlineUsers(onlineUsers.filter((id) => id !== user_id));
+    });
+  }, []);
+
+  useEffect(() => {
     if (data) {
       const ids = data.map((room) => room._id);
-      socket.emit("join room", ids);
+      socket.emit("join room", { ids, user_id: userProfile.user_id });
       setRooms(data);
     }
     if (error) {
       console.log(error);
     }
   }, [data, error]);
+
+  // Clean up
+  // useEffect(() => {
+  //   return function cleanup() {
+  //     console.log("quit");
+  //     if (!data) return;
+  //     const ids = data.map((room) => room._id);
+  //     socket.emit("leave room", { ids, user_id: userProfile.user_id });
+  //   };
+  // }, []);
   return (
     <div className="w-64 flex-shrink-0 border-r border-gray-600 pr-5">
       <div className="">
@@ -90,16 +110,21 @@ export default function Friend(props: {
             )[0];
             return (
               <div
-                className="flex items-center rounded-md hover:bg-gray-700 p-2 cursor-pointer mb-2 transition"
+                className="flex items-center rounded-md hover:bg-gray-700 p-2 cursor-pointer mb-2"
                 onClick={() => joinRoom(room, talker)}
                 key={room._id}
               >
-                <Image
-                  src={talker.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
-                  width={44}
-                  height={44}
-                  className="rounded-full"
-                />
+                <div className="h-11 relative">
+                  <Image
+                    src={talker.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
+                    width={44}
+                    height={44}
+                    className="rounded-full"
+                  />
+                  {onlineUsers.includes(talker.id) && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full"></div>
+                  )}
+                </div>
                 <div className="ml-2 whitespace-nowrap relative top-1">
                   <p className="overflow-ellipsis overflow-hidden w-40">
                     {talker.name}

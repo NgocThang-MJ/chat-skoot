@@ -9,6 +9,8 @@ import { GoTelescope } from "react-icons/go";
 import { BiSearch } from "react-icons/bi";
 import { signOut } from "next-auth/client";
 
+import socket from "../../util/socket";
+
 import {
   IUserProfile,
   IRequestUser,
@@ -38,6 +40,7 @@ export default function Option(props: {
   const logout = () => {
     props.setLoading(true);
     localStorage.removeItem("session.user");
+    socket.disconnect();
     signOut({ redirect: false, callbackUrl: "/" });
   };
 
