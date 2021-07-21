@@ -206,7 +206,7 @@ export default function Chat(props: {
         tracks.forEach((track) => track.stop());
         // peer.destroy();
         // router.reload();
-        // window.location.reload();
+        window.location.reload();
       });
 
       socket.on("off call", () => {

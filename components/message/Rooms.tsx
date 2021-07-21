@@ -105,7 +105,7 @@ export default function Friend(props: {
         setImageCaller("");
         tracks.forEach((track) => track.stop());
         // router.reload();
-        // window.location.reload();
+        window.location.reload();
       });
 
       peer.on("signal", (data) => {
