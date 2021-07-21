@@ -32,13 +32,21 @@ export default function Friend(props: {
   inCall: boolean;
   connectionRef: MutableRefObject<Instance | undefined>;
   friendsVideoRef: RefObject<HTMLVideoElement>;
+  roomIdCall: string;
+  setRoomIdCall: Function;
 }) {
-  const { userProfile, inCall, setInCall, connectionRef, friendsVideoRef } =
-    props;
+  const {
+    userProfile,
+    inCall,
+    setInCall,
+    connectionRef,
+    friendsVideoRef,
+    roomIdCall,
+    setRoomIdCall,
+  } = props;
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
   const [ringing, setRinging] = useState(false);
-  const [fromRoom, setFromRoom] = useState();
   const [callerSignal, setCallerSignal] = useState<SignalData>();
   const [nameCaller, setNameCaller] = useState("");
   const [imageCaller, setImageCaller] = useState("");
@@ -68,42 +76,61 @@ export default function Friend(props: {
   };
 
   const answer = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: true,
-    });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: true,
+      });
+      const tracks = stream.getTracks();
+      setInCall(true);
+      setRinging(false);
 
-    setInCall(true);
-    setRinging(false);
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream: stream,
-    });
+      const peer = new Peer({
+        initiator: false,
+        trickle: false,
+        stream: stream,
+      });
 
-    peer.on("signal", (data) => {
-      socket.emit("answer", { signal_data: data, room_id: fromRoom });
-    });
+      connectionRef.current = peer;
 
-    peer.on("stream", (stream) => {
-      friendsVideoRef.current!.srcObject = stream;
-    });
-    if (callerSignal) {
-      peer.signal(callerSignal);
+      socket.on("end call", () => {
+        console.log("on end call");
+        // peer.destroy();
+        setRinging(false);
+        setInCall(false);
+        setNameCaller("");
+        setImageCaller("");
+        tracks.forEach((track) => track.stop());
+      });
+
+      peer.on("signal", (data) => {
+        console.log(roomIdCall);
+        socket.emit("answer", { signal_data: data, room_id: roomIdCall });
+      });
+
+      peer.on("stream", (stream) => {
+        friendsVideoRef.current!.srcObject = stream;
+      });
+      if (callerSignal) {
+        peer.signal(callerSignal);
+      }
+    } catch (err) {
+      alert("Can't get your camera and/or microphone");
     }
-    connectionRef.current = peer;
   };
 
   const endCall = () => {
-    connectionRef.current?.destroy();
-    socket.emit("end call", fromRoom);
-    setRinging(false);
-    setInCall(false);
-    setNameCaller("");
-    setImageCaller("");
+    // connectionRef.current?.destroy();
+    console.log(roomIdCall);
+    socket.emit("end call", roomIdCall);
+    // setRinging(false);
+    // setInCall(false);
+    // setNameCaller("");
+    // setImageCaller("");
   };
 
   const rejectCall = () => {
+    socket.emit("reject call", roomIdCall);
     setRinging(false);
     setInCall(false);
   };
@@ -138,30 +165,41 @@ export default function Friend(props: {
 
   useEffect(() => {
     socket.on("call", ({ signal_data, name_caller, image_caller, room_id }) => {
+      console.log("room id", room_id);
       setRinging(true);
       setCallerSignal(signal_data);
-      setFromRoom(room_id);
+      setRoomIdCall(room_id);
       setNameCaller(name_caller);
       setImageCaller(image_caller);
     });
 
-    socket.on("end call", () => {
-      console.log("on end call");
-      setRinging(false);
-      setInCall(false);
-      if (connectionRef.current) {
-        connectionRef.current.destroy();
-      }
-    });
+    // socket.on("end call", () => {
+    //   console.log("on end call");
+    //   setRinging(false);
+    //   setInCall(false);
+    //   if (connectionRef.current) {
+    //     connectionRef.current.destroy();
+    //   }
+    // });
 
     socket.on("off call", () => {
       console.log("on off call");
       setRinging(false);
       setInCall(false);
-      if (connectionRef.current) {
-        connectionRef.current.destroy();
-      }
+      setCallerSignal(undefined);
+      setRoomIdCall("");
+      setNameCaller("");
+      setImageCaller("");
     });
+
+    // socket.on("off call", () => {
+    //   console.log("on off call");
+    //   setRinging(false);
+    //   setInCall(false);
+    //   if (connectionRef.current) {
+    //     connectionRef.current.destroy();
+    //   }
+    // });
   }, []);
 
   // Clean up

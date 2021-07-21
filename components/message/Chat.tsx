@@ -34,6 +34,7 @@ export default function Chat(props: {
   setInCall: Function;
   connectionRef: MutableRefObject<Instance | undefined>;
   friendsVideoRef: RefObject<HTMLVideoElement>;
+  setRoomIdCall: Function;
 }) {
   const {
     conversation,
@@ -43,6 +44,7 @@ export default function Chat(props: {
     setInCall,
     friendsVideoRef,
     connectionRef,
+    setRoomIdCall,
   } = props;
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -154,43 +156,69 @@ export default function Chat(props: {
 
   // Call
   const call = async () => {
-    console.log("call");
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: true,
-    });
-    console.log("get user media");
-
-    setCalling(true);
-
-    const peer = new Peer({
-      initiator: true,
-      trickle: false,
-      stream: stream,
-    });
-
-    peer.on("signal", (data) => {
-      console.log("calling", room?._id);
-      socket.emit("call", {
-        signal_data: data,
-        room_id: room?._id,
-        name_caller: userProfile.username,
-        image_caller: userProfile.img_url,
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: false,
+        audio: true,
       });
-    });
 
-    peer.on("stream", (stream) => {
-      friendsVideoRef.current!.srcObject = stream;
-    });
+      const tracks = stream.getTracks();
 
-    socket.on("answer", (signal) => {
-      console.log("friend answer");
-      peer.signal(signal);
-      setInCall(true);
-      setCalling(false);
-    });
+      setCalling(true);
+      setRoomIdCall(room?._id);
 
-    connectionRef.current = peer;
+      const peer = new Peer({
+        initiator: true,
+        trickle: false,
+        stream: stream,
+      });
+
+      connectionRef.current = peer;
+
+      peer.on("signal", (data) => {
+        socket.emit("call", {
+          signal_data: data,
+          room_id: room?._id,
+          name_caller: userProfile.username,
+          image_caller: userProfile.img_url,
+        });
+      });
+
+      peer.on("stream", (stream) => {
+        friendsVideoRef.current!.srcObject = stream;
+      });
+
+      socket.on("answer", (signal) => {
+        console.log("friend answer");
+        peer.signal(signal);
+        setInCall(true);
+        setCalling(false);
+      });
+
+      socket.on("end call", () => {
+        console.log("on end call");
+        setInCall(false);
+        tracks.forEach((track) => track.stop());
+        // peer.destroy();
+      });
+
+      socket.on("off call", () => {
+        peer.destroy();
+        tracks.forEach((track) => track.stop());
+      });
+      socket.on("reject call", () => {
+        console.log("on reject call");
+        tracks.forEach((track) => track.stop());
+        peer.destroy();
+        setCalling(false);
+        setInCall(false);
+        // if (connectionRef.current) {
+        //   connectionRef.current.destroy();
+        // }
+      });
+    } catch (err) {
+      alert("Can't get your camera and/or microphone");
+    }
   };
 
   const offCall = () => {

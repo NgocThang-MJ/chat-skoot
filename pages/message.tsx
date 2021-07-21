@@ -20,6 +20,7 @@ export default function Home() {
   const [id, setId] = useState("");
   const [loading, setLoading] = useState(true);
   const [room, setRoom] = useState<IRoom>();
+  const [roomIdCall, setRoomIdCall] = useState("");
   const [roomSocketId, setRoomSocketId] = useState("");
   const [conversation, setConversation] = useState<RoomMember>();
   const [userProfile, setUserProfile] = useState<IUserProfile>({
@@ -109,6 +110,8 @@ export default function Home() {
               setInCall={setInCall}
               connectionRef={connectionRef}
               friendsVideoRef={friendsVideoRef}
+              roomIdCall={roomIdCall}
+              setRoomIdCall={setRoomIdCall}
             />
 
             <Chat
@@ -119,6 +122,7 @@ export default function Home() {
               setInCall={setInCall}
               connectionRef={connectionRef}
               friendsVideoRef={friendsVideoRef}
+              setRoomIdCall={setRoomIdCall}
             />
 
             <Option userProfile={userProfile} setLoading={setLoading} />
