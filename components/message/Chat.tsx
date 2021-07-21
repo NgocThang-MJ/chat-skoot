@@ -49,7 +49,7 @@ export default function Chat(props: {
     connectionRef,
     setRoomIdCall,
   } = props;
-  // const router = useRouter();
+  const router = useRouter();
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   // const [typingUser, setTypingUser] = useState<string[]>([]);
@@ -205,8 +205,8 @@ export default function Chat(props: {
         setInCall(false);
         tracks.forEach((track) => track.stop());
         // peer.destroy();
-        // router.reload();
-        window.location.reload();
+        router.reload();
+        // window.location.reload();
       });
 
       socket.on("off call", () => {
