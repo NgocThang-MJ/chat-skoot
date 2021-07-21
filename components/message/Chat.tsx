@@ -7,6 +7,7 @@ import {
   RefObject,
   MutableRefObject,
   useReducer,
+  useCallback,
 } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -60,8 +61,6 @@ export default function Chat(props: {
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
-
-  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
