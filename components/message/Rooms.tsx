@@ -5,8 +5,10 @@ import {
   useRef,
   MutableRefObject,
   RefObject,
+  useReducer,
 } from "react";
 import Image from "next/image";
+import { useRouter } from "next/router";
 import { BiSearch } from "react-icons/bi";
 import axios from "axios";
 import useSWR from "swr";
@@ -44,6 +46,7 @@ export default function Friend(props: {
     roomIdCall,
     setRoomIdCall,
   } = props;
+  // const router = useRouter();
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
   const [ringing, setRinging] = useState(false);
@@ -54,6 +57,8 @@ export default function Friend(props: {
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const myVideoRef = useRef<HTMLVideoElement>(null);
+
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const fetchRooms = async (user_id: string) => {
     if (!user_id) return;
@@ -101,6 +106,9 @@ export default function Friend(props: {
         setNameCaller("");
         setImageCaller("");
         tracks.forEach((track) => track.stop());
+        // router.reload();
+        // window.location.reload();
+        // forceUpdate();
       });
 
       peer.on("signal", (data) => {

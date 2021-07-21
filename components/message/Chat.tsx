@@ -6,9 +6,11 @@ import {
   KeyboardEvent,
   RefObject,
   MutableRefObject,
+  useReducer,
 } from "react";
 import Image from "next/image";
-import { FaPhoneAlt, FaVideo, FaPhone } from "react-icons/fa";
+import { useRouter } from "next/router";
+import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import { GrEmoji, GrClose } from "react-icons/gr";
 import axios from "axios";
@@ -46,6 +48,7 @@ export default function Chat(props: {
     connectionRef,
     setRoomIdCall,
   } = props;
+  // const router = useRouter();
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   // const [typingUser, setTypingUser] = useState<string[]>([]);
@@ -57,6 +60,8 @@ export default function Chat(props: {
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
+
+  const [_, forceUpdate] = useReducer((x) => x + 1, 0);
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
@@ -156,6 +161,7 @@ export default function Chat(props: {
 
   // Call
   const call = async () => {
+    // window.open(`http://localhost:3000/call?roomId=${room?._id}`, "_blank");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: false,
@@ -200,16 +206,18 @@ export default function Chat(props: {
         setInCall(false);
         tracks.forEach((track) => track.stop());
         // peer.destroy();
+        // router.reload();
+        // window.location.reload();
       });
 
       socket.on("off call", () => {
-        peer.destroy();
+        // peer.destroy();
         tracks.forEach((track) => track.stop());
       });
       socket.on("reject call", () => {
         console.log("on reject call");
         tracks.forEach((track) => track.stop());
-        peer.destroy();
+        // peer.destroy();
         setCalling(false);
         setInCall(false);
         // if (connectionRef.current) {
