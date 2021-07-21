@@ -1,4 +1,12 @@
-import { useState, FormEvent, useEffect, useRef, KeyboardEvent } from "react";
+import {
+  useState,
+  FormEvent,
+  useEffect,
+  useRef,
+  KeyboardEvent,
+  RefObject,
+  MutableRefObject,
+} from "react";
 import Image from "next/image";
 import { FaPhoneAlt, FaVideo, FaPhone } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
@@ -7,7 +15,7 @@ import axios from "axios";
 import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
 import { v4 as uuidv4 } from "uuid";
-import Peer, { Instance, SignalData } from "simple-peer";
+import Peer, { Instance } from "simple-peer";
 
 import socket from "../../util/socket";
 
@@ -23,28 +31,30 @@ export default function Chat(props: {
   conversation: RoomMember | undefined;
   room: IRoom | undefined;
   roomSocketId: string;
+  setInCall: Function;
+  connectionRef: MutableRefObject<Instance | undefined>;
+  friendsVideoRef: RefObject<HTMLVideoElement>;
 }) {
-  const { conversation, room, userProfile, roomSocketId } = props;
+  const {
+    conversation,
+    room,
+    userProfile,
+    roomSocketId,
+    setInCall,
+    friendsVideoRef,
+    connectionRef,
+  } = props;
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   // const [typingUser, setTypingUser] = useState<string[]>([]);
   // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [loadingMsg, setLoadingMsg] = useState(true);
-  const [ringing, setRinging] = useState(false);
   const [calling, setCalling] = useState(false);
-  const [inCall, setInCall] = useState(false);
-  const [callerSignal, setCallerSignal] = useState<SignalData>();
-  const [nameCaller, setNameCaller] = useState("");
-  const [imageCaller, setImageCaller] = useState("");
-  const [fromRoom, setFromRoom] = useState();
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
-  const connectionRef = useRef<Instance>();
-  const myVideoRef = useRef<HTMLVideoElement>(null);
-  const friendsVideoRef = useRef<HTMLVideoElement>(null);
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
@@ -183,47 +193,6 @@ export default function Chat(props: {
     connectionRef.current = peer;
   };
 
-  const answer = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: false,
-      audio: true,
-    });
-
-    setInCall(true);
-    setRinging(false);
-    const peer = new Peer({
-      initiator: false,
-      trickle: false,
-      stream: stream,
-    });
-
-    peer.on("signal", (data) => {
-      socket.emit("answer", { signal_data: data, room_id: fromRoom });
-    });
-
-    peer.on("stream", (stream) => {
-      friendsVideoRef.current!.srcObject = stream;
-    });
-    if (callerSignal) {
-      peer.signal(callerSignal);
-    }
-    connectionRef.current = peer;
-  };
-
-  const endCall = () => {
-    connectionRef.current?.destroy();
-    socket.emit("end call", room?._id);
-    setRinging(false);
-    setInCall(false);
-    setNameCaller("");
-    setImageCaller("");
-  };
-
-  const rejectCall = () => {
-    setRinging(false);
-    setInCall(false);
-  };
-
   const offCall = () => {
     socket.emit("off call", room?._id);
     setCalling(false);
@@ -242,34 +211,6 @@ export default function Chat(props: {
   //     setTypingUser(typingUser.filter((id) => id !== user_id));
   //   });
   // }, [typingUser, isTyping]);
-
-  useEffect(() => {
-    socket.on("call", ({ signal_data, name_caller, image_caller, room_id }) => {
-      setRinging(true);
-      setCallerSignal(signal_data);
-      setFromRoom(room_id);
-      setNameCaller(name_caller);
-      setImageCaller(image_caller);
-    });
-
-    socket.on("end call", () => {
-      console.log("on end call");
-      setRinging(false);
-      setInCall(false);
-      if (connectionRef.current) {
-        connectionRef.current.destroy();
-      }
-    });
-
-    socket.on("off call", () => {
-      console.log("on off call");
-      setRinging(false);
-      setInCall(false);
-      if (connectionRef.current) {
-        connectionRef.current.destroy();
-      }
-    });
-  }, []);
 
   useEffect(() => {
     socket.on("message", ({ content, sender_id }) => {
@@ -303,36 +244,6 @@ export default function Chat(props: {
 
   return (
     <div className="flex-grow border-r border-gray-600 flex flex-col justify-between">
-      {ringing && (
-        <div className="absolute w-screen h-screen z-30 top-0 right-0 bg-gray-700">
-          <div className="mx-auto flex flex-col items-center justify-center h-2/3">
-            <Image
-              src={imageCaller || `${process.env.NEXT_PUBLIC_USER_IMG}`}
-              width={180}
-              height={180}
-              alt="Avatar"
-              className="rounded-full"
-            />
-            <p className="text-xl">{nameCaller}</p>
-            <p>Ringing...</p>
-            <div className="mt-4 flex justify-between w-52">
-              <div
-                onClick={rejectCall}
-                className="rounded-full bg-gray-400 p-3 cursor-pointer hover:bg-gray-300"
-              >
-                <GrClose className="h-6 w-6 text-white" />
-              </div>
-              <div
-                onClick={() => answer()}
-                className="rounded-full bg-green-400 p-3 cursor-pointer hover:bg-green-300"
-              >
-                <FaPhone className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {calling && (
         <div className="absolute w-screen h-screen z-10 top-0 right-0 bg-gray-700">
           <div className="mx-auto flex flex-col items-center justify-center h-2/3">
@@ -351,41 +262,6 @@ export default function Chat(props: {
                 className="rounded-full bg-gray-400 p-3 cursor-pointer hover:bg-gray-300"
               >
                 <GrClose className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {inCall && (
-        <div className="absolute w-screen h-screen z-40 top-0 right-0 bg-gray-700">
-          <div className="max-w-screen-lg mx-auto h-full flex items-center justify-center">
-            <div className="flex flex-col items-center w-full h-full">
-              <div className="flex items-center justify-center w-full h-4/5">
-                <div className="mx-2 w-1/3 h-5/6">
-                  <video
-                    // className="w-72 h-96"
-                    autoPlay
-                    muted
-                    playsInline
-                    ref={myVideoRef}
-                  />
-                </div>
-                <div className="mx-2 w-1/3 h-5/6">
-                  <video
-                    // className="w-72 h-96"
-                    autoPlay
-                    playsInline
-                    ref={friendsVideoRef}
-                  />
-                </div>
-              </div>
-
-              <div
-                onClick={endCall}
-                className="rounded-full bg-red-500 p-3 cursor-pointer hover:bg-red-600 mt-3 inline-block"
-              >
-                <FaPhone className="h-6 w-6" />
               </div>
             </div>
           </div>

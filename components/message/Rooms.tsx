@@ -1,9 +1,19 @@
-import { useEffect, useState, FormEvent } from "react";
+import {
+  useEffect,
+  useState,
+  FormEvent,
+  useRef,
+  MutableRefObject,
+  RefObject,
+} from "react";
 import Image from "next/image";
 import { BiSearch } from "react-icons/bi";
 import axios from "axios";
 import useSWR from "swr";
 import TimeAgo from "timeago-react";
+import Peer, { Instance, SignalData } from "simple-peer";
+import { GrClose } from "react-icons/gr";
+import { FaPhone } from "react-icons/fa";
 
 import socket from "../../util/socket";
 
@@ -18,12 +28,24 @@ export default function Friend(props: {
   setConversation: Function;
   setRoom: Function;
   setRoomSocketId: Function;
+  setInCall: Function;
+  inCall: boolean;
+  connectionRef: MutableRefObject<Instance | undefined>;
+  friendsVideoRef: RefObject<HTMLVideoElement>;
 }) {
-  const userProfile = props.userProfile;
+  const { userProfile, inCall, setInCall, connectionRef, friendsVideoRef } =
+    props;
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
+  const [ringing, setRinging] = useState(false);
+  const [fromRoom, setFromRoom] = useState();
+  const [callerSignal, setCallerSignal] = useState<SignalData>();
+  const [nameCaller, setNameCaller] = useState("");
+  const [imageCaller, setImageCaller] = useState("");
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
+
+  const myVideoRef = useRef<HTMLVideoElement>(null);
 
   const fetchRooms = async (user_id: string) => {
     if (!user_id) return;
@@ -43,6 +65,47 @@ export default function Friend(props: {
       name: talker.name,
       image: talker.image,
     });
+  };
+
+  const answer = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: false,
+      audio: true,
+    });
+
+    setInCall(true);
+    setRinging(false);
+    const peer = new Peer({
+      initiator: false,
+      trickle: false,
+      stream: stream,
+    });
+
+    peer.on("signal", (data) => {
+      socket.emit("answer", { signal_data: data, room_id: fromRoom });
+    });
+
+    peer.on("stream", (stream) => {
+      friendsVideoRef.current!.srcObject = stream;
+    });
+    if (callerSignal) {
+      peer.signal(callerSignal);
+    }
+    connectionRef.current = peer;
+  };
+
+  const endCall = () => {
+    connectionRef.current?.destroy();
+    socket.emit("end call", fromRoom);
+    setRinging(false);
+    setInCall(false);
+    setNameCaller("");
+    setImageCaller("");
+  };
+
+  const rejectCall = () => {
+    setRinging(false);
+    setInCall(false);
   };
 
   useEffect(() => {
@@ -73,6 +136,34 @@ export default function Friend(props: {
     }
   }, [data, error]);
 
+  useEffect(() => {
+    socket.on("call", ({ signal_data, name_caller, image_caller, room_id }) => {
+      setRinging(true);
+      setCallerSignal(signal_data);
+      setFromRoom(room_id);
+      setNameCaller(name_caller);
+      setImageCaller(image_caller);
+    });
+
+    socket.on("end call", () => {
+      console.log("on end call");
+      setRinging(false);
+      setInCall(false);
+      if (connectionRef.current) {
+        connectionRef.current.destroy();
+      }
+    });
+
+    socket.on("off call", () => {
+      console.log("on off call");
+      setRinging(false);
+      setInCall(false);
+      if (connectionRef.current) {
+        connectionRef.current.destroy();
+      }
+    });
+  }, []);
+
   // Clean up
   // useEffect(() => {
   //   return function cleanup() {
@@ -84,6 +175,70 @@ export default function Friend(props: {
   // }, []);
   return (
     <div className="w-64 flex-shrink-0 border-r border-gray-600 pr-5">
+      {ringing && (
+        <div className="absolute w-screen h-screen z-30 top-0 right-0 bg-gray-700">
+          <div className="mx-auto flex flex-col items-center justify-center h-2/3">
+            <Image
+              src={imageCaller || `${process.env.NEXT_PUBLIC_USER_IMG}`}
+              width={180}
+              height={180}
+              alt="Avatar"
+              className="rounded-full"
+            />
+            <p className="text-xl">{nameCaller}</p>
+            <p>Ringing...</p>
+            <div className="mt-4 flex justify-between w-52">
+              <div
+                onClick={rejectCall}
+                className="rounded-full bg-gray-400 p-3 cursor-pointer hover:bg-gray-300"
+              >
+                <GrClose className="h-6 w-6 text-white" />
+              </div>
+              <div
+                onClick={() => answer()}
+                className="rounded-full bg-green-400 p-3 cursor-pointer hover:bg-green-300"
+              >
+                <FaPhone className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {inCall && (
+        <div className="absolute w-screen h-screen z-40 top-0 right-0 bg-gray-700">
+          <div className="max-w-screen-lg mx-auto h-full flex items-center justify-center">
+            <div className="flex flex-col items-center w-full h-full">
+              <div className="flex items-center justify-center w-full h-4/5">
+                <div className="mx-2 w-1/3 h-5/6">
+                  <video
+                    // className="w-72 h-96"
+                    autoPlay
+                    muted
+                    playsInline
+                    ref={myVideoRef}
+                  />
+                </div>
+                <div className="mx-2 w-1/3 h-5/6">
+                  <video
+                    // className="w-72 h-96"
+                    autoPlay
+                    playsInline
+                    ref={friendsVideoRef}
+                  />
+                </div>
+              </div>
+
+              <div
+                onClick={endCall}
+                className="rounded-full bg-red-500 p-3 cursor-pointer hover:bg-red-600 mt-3 inline-block"
+              >
+                <FaPhone className="h-6 w-6" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="">
         <p className="text-xl">Friends</p>
         <form
