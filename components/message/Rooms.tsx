@@ -1,19 +1,9 @@
-import {
-  useEffect,
-  useState,
-  FormEvent,
-  useRef,
-  MutableRefObject,
-  RefObject,
-  useReducer,
-} from "react";
+import { useEffect, useState, FormEvent, useRef } from "react";
 import Image from "next/image";
-import { useRouter } from "next/router";
 import { BiSearch } from "react-icons/bi";
 import axios from "axios";
 import useSWR from "swr";
 import TimeAgo from "timeago-react";
-import Peer, { Instance, SignalData } from "simple-peer";
 import { GrClose } from "react-icons/gr";
 import { FaPhone } from "react-icons/fa";
 
@@ -30,33 +20,18 @@ export default function Friend(props: {
   setConversation: Function;
   setRoom: Function;
   setRoomSocketId: Function;
-  setInCall: Function;
-  inCall: boolean;
-  connectionRef: MutableRefObject<Instance | undefined>;
-  friendsVideoRef: RefObject<HTMLVideoElement>;
   roomIdCall: string;
   setRoomIdCall: Function;
 }) {
-  const {
-    userProfile,
-    inCall,
-    setInCall,
-    connectionRef,
-    friendsVideoRef,
-    roomIdCall,
-    setRoomIdCall,
-  } = props;
-  const router = useRouter();
+  const { userProfile, roomIdCall, setRoomIdCall } = props;
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
   const [ringing, setRinging] = useState(false);
-  const [callerSignal, setCallerSignal] = useState<SignalData>();
   const [nameCaller, setNameCaller] = useState("");
   const [imageCaller, setImageCaller] = useState("");
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
-
-  const myVideoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>();
 
   const fetchRooms = async (user_id: string) => {
     if (!user_id) return;
@@ -78,66 +53,22 @@ export default function Friend(props: {
     });
   };
 
-  const answer = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: false,
-        audio: true,
-      });
-      const tracks = stream.getTracks();
-      setInCall(true);
-      setRinging(false);
+  const answer = () => {
+    localStorage.setItem("name_caller", nameCaller);
+    localStorage.setItem("img_caller", imageCaller);
+    localStorage.setItem("name_talker", userProfile.username);
+    localStorage.setItem("img_talker", userProfile.img_url);
 
-      const peer = new Peer({
-        initiator: false,
-        trickle: false,
-        stream: stream,
-      });
+    audioRef.current && audioRef.current.pause();
+    window.open(`http://localhost:3000/call?room_id=${roomIdCall}&answer=true`);
 
-      connectionRef.current = peer;
-
-      socket.on("end call", () => {
-        console.log("on end call");
-        // peer.destroy();
-        setRinging(false);
-        setInCall(false);
-        setNameCaller("");
-        setImageCaller("");
-        tracks.forEach((track) => track.stop());
-        router.reload();
-        // window.location.reload();
-      });
-
-      peer.on("signal", (data) => {
-        console.log(roomIdCall);
-        socket.emit("answer", { signal_data: data, room_id: roomIdCall });
-      });
-
-      peer.on("stream", (stream) => {
-        friendsVideoRef.current!.srcObject = stream;
-      });
-      if (callerSignal) {
-        peer.signal(callerSignal);
-      }
-    } catch (err) {
-      alert("Can't get your camera and/or microphone");
-    }
-  };
-
-  const endCall = () => {
-    // connectionRef.current?.destroy();
-    console.log(roomIdCall);
-    socket.emit("end call", roomIdCall);
-    // setRinging(false);
-    // setInCall(false);
-    // setNameCaller("");
-    // setImageCaller("");
+    setRinging(false);
   };
 
   const rejectCall = () => {
     socket.emit("reject call", roomIdCall);
+    audioRef.current && audioRef.current.pause();
     setRinging(false);
-    setInCall(false);
   };
 
   useEffect(() => {
@@ -169,42 +100,26 @@ export default function Friend(props: {
   }, [data, error]);
 
   useEffect(() => {
+    audioRef.current = new Audio("/RenaiCirculation.mp3");
     socket.on("call", ({ signal_data, name_caller, image_caller, room_id }) => {
       console.log("room id", room_id);
+
+      audioRef.current && audioRef.current.play();
       setRinging(true);
-      setCallerSignal(signal_data);
       setRoomIdCall(room_id);
       setNameCaller(name_caller);
       setImageCaller(image_caller);
+      localStorage.setItem("data", JSON.stringify(signal_data));
     });
-
-    // socket.on("end call", () => {
-    //   console.log("on end call");
-    //   setRinging(false);
-    //   setInCall(false);
-    //   if (connectionRef.current) {
-    //     connectionRef.current.destroy();
-    //   }
-    // });
 
     socket.on("off call", () => {
       console.log("on off call");
+      audioRef.current && audioRef.current.pause();
       setRinging(false);
-      setInCall(false);
-      setCallerSignal(undefined);
       setRoomIdCall("");
       setNameCaller("");
       setImageCaller("");
     });
-
-    // socket.on("off call", () => {
-    //   console.log("on off call");
-    //   setRinging(false);
-    //   setInCall(false);
-    //   if (connectionRef.current) {
-    //     connectionRef.current.destroy();
-    //   }
-    // });
   }, []);
 
   // Clean up
@@ -248,40 +163,6 @@ export default function Friend(props: {
         </div>
       )}
 
-      {inCall && (
-        <div className="absolute w-screen h-screen z-40 top-0 right-0 bg-gray-700">
-          <div className="max-w-screen-lg mx-auto h-full flex items-center justify-center">
-            <div className="flex flex-col items-center w-full h-full">
-              <div className="flex items-center justify-center w-full h-4/5">
-                <div className="mx-2 w-1/3 h-5/6">
-                  <video
-                    // className="w-72 h-96"
-                    autoPlay
-                    muted
-                    playsInline
-                    ref={myVideoRef}
-                  />
-                </div>
-                <div className="mx-2 w-1/3 h-5/6">
-                  <video
-                    // className="w-72 h-96"
-                    autoPlay
-                    playsInline
-                    ref={friendsVideoRef}
-                  />
-                </div>
-              </div>
-
-              <div
-                onClick={endCall}
-                className="rounded-full bg-red-500 p-3 cursor-pointer hover:bg-red-600 mt-3 inline-block"
-              >
-                <FaPhone className="h-6 w-6" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
       <div className="">
         <p className="text-xl">Friends</p>
         <form

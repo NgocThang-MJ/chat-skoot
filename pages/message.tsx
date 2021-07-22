@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { useSession, signOut } from "next-auth/client";
 import useSWR from "swr";
 import axios from "axios";
-import { Instance } from "simple-peer";
 
 import Rooms from "../components/message/Rooms";
 import Chat from "../components/message/Chat";
@@ -32,9 +31,6 @@ export default function Home() {
     friend_requests: [],
     friends: [],
   });
-  const [inCall, setInCall] = useState(false);
-  const connectionRef = useRef<Instance>();
-  const friendsVideoRef = useRef<HTMLVideoElement>(null);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
 
   const fetcher = async (url: string, id: string) => {
@@ -58,13 +54,6 @@ export default function Home() {
       });
     }
   }, [session, loadingSession]);
-
-  // useEffect(() => {
-  //   const socket = io(`${server_url}`);
-  //   socket.on("connect", () => {
-  //     console.log(socket.id, "id socket");
-  //   });
-  // }, []);
 
   useEffect(() => {
     if (localStorage.getItem("session.user")) {
@@ -106,10 +95,6 @@ export default function Home() {
               setConversation={setConversation}
               setRoom={setRoom}
               setRoomSocketId={setRoomSocketId}
-              inCall={inCall}
-              setInCall={setInCall}
-              connectionRef={connectionRef}
-              friendsVideoRef={friendsVideoRef}
               roomIdCall={roomIdCall}
               setRoomIdCall={setRoomIdCall}
             />
@@ -119,9 +104,6 @@ export default function Home() {
               conversation={conversation}
               room={room}
               roomSocketId={roomSocketId}
-              setInCall={setInCall}
-              connectionRef={connectionRef}
-              friendsVideoRef={friendsVideoRef}
               setRoomIdCall={setRoomIdCall}
             />
 

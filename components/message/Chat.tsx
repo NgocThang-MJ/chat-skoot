@@ -1,24 +1,13 @@
-import {
-  useState,
-  FormEvent,
-  useEffect,
-  useRef,
-  KeyboardEvent,
-  RefObject,
-  MutableRefObject,
-  useReducer,
-  useCallback,
-} from "react";
+import { useState, FormEvent, useEffect, useRef, KeyboardEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
-import { GrEmoji, GrClose } from "react-icons/gr";
+import { GrEmoji } from "react-icons/gr";
 import axios from "axios";
 import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
 import { v4 as uuidv4 } from "uuid";
-import Peer, { Instance } from "simple-peer";
 
 import socket from "../../util/socket";
 
@@ -34,21 +23,10 @@ export default function Chat(props: {
   conversation: RoomMember | undefined;
   room: IRoom | undefined;
   roomSocketId: string;
-  setInCall: Function;
-  connectionRef: MutableRefObject<Instance | undefined>;
-  friendsVideoRef: RefObject<HTMLVideoElement>;
   setRoomIdCall: Function;
 }) {
-  const {
-    conversation,
-    room,
-    userProfile,
-    roomSocketId,
-    setInCall,
-    friendsVideoRef,
-    connectionRef,
-    setRoomIdCall,
-  } = props;
+  const { conversation, room, userProfile, roomSocketId, setRoomIdCall } =
+    props;
   const router = useRouter();
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
@@ -56,7 +34,6 @@ export default function Chat(props: {
   // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [loadingMsg, setLoadingMsg] = useState(true);
-  const [calling, setCalling] = useState(false);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -159,79 +136,17 @@ export default function Chat(props: {
   };
 
   // Call
-  const call = async () => {
-    // window.open(`http://localhost:3000/call?roomId=${room?._id}`, "_blank");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: false,
-        audio: true,
-      });
+  const call = () => {
+    localStorage.setItem("name_caller", userProfile.username);
+    localStorage.setItem("img_caller", userProfile.img_url);
+    localStorage.setItem("name_talker", conversation?.name as string);
+    localStorage.setItem("img_talker", conversation?.image as string);
 
-      const tracks = stream.getTracks();
+    window.open(
+      `http://localhost:3000/call?room_id=${room?._id}&socket_id=${socket.id}`
+    );
 
-      setCalling(true);
-      setRoomIdCall(room?._id);
-
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream: stream,
-      });
-
-      connectionRef.current = peer;
-
-      peer.on("signal", (data) => {
-        socket.emit("call", {
-          signal_data: data,
-          room_id: room?._id,
-          name_caller: userProfile.username,
-          image_caller: userProfile.img_url,
-        });
-      });
-
-      peer.on("stream", (stream) => {
-        friendsVideoRef.current!.srcObject = stream;
-      });
-
-      socket.on("answer", (signal) => {
-        console.log("friend answer");
-        peer.signal(signal);
-        setInCall(true);
-        setCalling(false);
-      });
-
-      socket.on("end call", () => {
-        console.log("on end call");
-        setInCall(false);
-        tracks.forEach((track) => track.stop());
-        // peer.destroy();
-        router.reload();
-        // window.location.reload();
-      });
-
-      socket.on("off call", () => {
-        // peer.destroy();
-        tracks.forEach((track) => track.stop());
-      });
-      socket.on("reject call", () => {
-        console.log("on reject call");
-        tracks.forEach((track) => track.stop());
-        // peer.destroy();
-        setCalling(false);
-        setInCall(false);
-        // if (connectionRef.current) {
-        //   connectionRef.current.destroy();
-        // }
-      });
-    } catch (err) {
-      alert("Can't get your camera and/or microphone");
-    }
-  };
-
-  const offCall = () => {
-    socket.emit("off call", room?._id);
-    setCalling(false);
-    setInCall(false);
+    setRoomIdCall(room?._id);
   };
 
   // Effect
@@ -279,30 +194,6 @@ export default function Chat(props: {
 
   return (
     <div className="flex-grow border-r border-gray-600 flex flex-col justify-between">
-      {calling && (
-        <div className="absolute w-screen h-screen z-10 top-0 right-0 bg-gray-700">
-          <div className="mx-auto flex flex-col items-center justify-center h-2/3">
-            <Image
-              src={conversation?.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
-              width={180}
-              height={180}
-              alt="Avatar"
-              className="rounded-full"
-            />
-            <p className="text-xl">{conversation?.name}</p>
-            <p>Calling...</p>
-            <div className="mt-4">
-              <div
-                onClick={offCall}
-                className="rounded-full bg-gray-400 p-3 cursor-pointer hover:bg-gray-300"
-              >
-                <GrClose className="h-6 w-6 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {conversation && (
         <>
           <div className="flex justify-between items-center border-b border-gray-700 pb-1 flex-shrink-0">
@@ -399,7 +290,6 @@ export default function Chat(props: {
                     theme="dark"
                     title="Chat Skoot"
                     emoji="speech_balloon"
-                    set="facebook"
                   />
                 </div>
               </div>
