@@ -108,6 +108,7 @@ export default function Friend(props: {
     socket.on(
       "call",
       ({ signal_data, name_caller, image_caller, room_id, is_video }) => {
+        audioRef.current ? (audioRef.current!.currentTime = 0) : null;
         audioRef.current && audioRef.current.play();
         setIsVideoCall(is_video);
         setRinging(true);

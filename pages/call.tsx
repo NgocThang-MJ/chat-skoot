@@ -99,6 +99,7 @@ export default function Call() {
 
           peer.signal(remote_data);
         } else {
+          audioRef.current ? (audioRef.current!.currentTime = 0) : null;
           audioRef.current && audioRef.current.play();
           setCalling(true);
           const peer = new Peer({
