@@ -9,7 +9,7 @@ import socket from "../util/socket";
 
 export default function Call() {
   const router = useRouter();
-  const { room_id, socket_id, answer } = router.query;
+  const { room_id, socket_id, answer, video, audio } = router.query;
   const [talkerName, setTalkerName] = useState("");
   const [talkerImg, setTalkerImg] = useState("");
   const [calling, setCalling] = useState(false);
@@ -52,22 +52,19 @@ export default function Call() {
     if (!router.isReady) return;
     socket.connect();
     socket.on("connect", () => {
-      console.log("on connect socket");
       socket.emit("join conversation", room_id);
     });
     const name_caller = localStorage.getItem("name_caller");
     const image_caller = localStorage.getItem("img_caller");
     navigator.mediaDevices
       .getUserMedia({
-        video: false,
-        audio: true,
+        video: video === "true",
+        audio: audio === "true",
       })
       .then((stream) => {
         const tracks = stream.getTracks();
-        console.log(answer);
 
         socket.on("end call", () => {
-          console.log("on end call");
           setInCall(false);
           tracks.forEach((track) => track.stop());
           clearStorage();
@@ -117,6 +114,7 @@ export default function Call() {
               name_caller,
               image_caller,
               socket_id,
+              is_video: video === "true",
             });
           });
 
@@ -127,7 +125,6 @@ export default function Call() {
           });
 
           socket.on("answer", (signal) => {
-            console.log("friend answer");
             peer.signal(signal);
             setInCall(true);
             setCalling(false);
@@ -150,11 +147,10 @@ export default function Call() {
       .catch((err) => {
         // clearStorage();
         console.log(err);
+        alert("Can't use video and/or audio");
+        endCall();
+        window.close();
       });
-
-    return () => {
-      endCall();
-    };
   }, [router.isReady]);
 
   return (

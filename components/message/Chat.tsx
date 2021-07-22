@@ -1,6 +1,5 @@
 import { useState, FormEvent, useEffect, useRef, KeyboardEvent } from "react";
 import Image from "next/image";
-import { useRouter } from "next/router";
 import { FaPhoneAlt, FaVideo } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import { GrEmoji } from "react-icons/gr";
@@ -27,17 +26,16 @@ export default function Chat(props: {
 }) {
   const { conversation, room, userProfile, roomSocketId, setRoomIdCall } =
     props;
-  const router = useRouter();
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   // const [typingUser, setTypingUser] = useState<string[]>([]);
   // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [loadingMsg, setLoadingMsg] = useState(true);
-  const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
   const client_url = process.env.NEXT_PUBLIC_CLIENT_URL;
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
@@ -137,14 +135,16 @@ export default function Chat(props: {
   };
 
   // Call
-  const call = () => {
+  const call = (option: { video: boolean; audio: boolean }) => {
     localStorage.setItem("name_caller", userProfile.username);
     localStorage.setItem("img_caller", userProfile.img_url);
     localStorage.setItem("name_talker", conversation?.name as string);
     localStorage.setItem("img_talker", conversation?.image as string);
 
+    const { video, audio } = option;
+
     window.open(
-      `${client_url}/call?room_id=${room?._id}&socket_id=${socket.id}`
+      `${client_url}/call?room_id=${room?._id}&socket_id=${socket.id}&video=${video}&audio=${audio}`
     );
 
     setRoomIdCall(room?._id);
@@ -212,10 +212,13 @@ export default function Chat(props: {
             </div>
             <div className="mr-2 flex">
               <FaPhoneAlt
-                onClick={call}
+                onClick={() => call({ video: false, audio: true })}
                 className="h-5 w-5 text-red-500 mr-6 cursor-pointer"
               />
-              <FaVideo className="h-5 w-5 text-red-500 mr-4 cursor-pointer" />
+              <FaVideo
+                onClick={() => call({ video: true, audio: true })}
+                className="h-5 w-5 text-red-500 mr-4 cursor-pointer"
+              />
             </div>
           </div>
           <div

@@ -5,7 +5,7 @@ import axios from "axios";
 import useSWR from "swr";
 import TimeAgo from "timeago-react";
 import { GrClose } from "react-icons/gr";
-import { FaPhone } from "react-icons/fa";
+import { FaPhone, FaVideo } from "react-icons/fa";
 
 import socket from "../../util/socket";
 
@@ -27,6 +27,7 @@ export default function Friend(props: {
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
   const [ringing, setRinging] = useState(false);
+  const [isVideoCall, setIsVideoCall] = useState(false);
   const [nameCaller, setNameCaller] = useState("");
   const [imageCaller, setImageCaller] = useState("");
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
@@ -61,7 +62,9 @@ export default function Friend(props: {
     localStorage.setItem("img_talker", userProfile.img_url);
 
     audioRef.current && audioRef.current.pause();
-    window.open(`${client_url}/call?room_id=${roomIdCall}&answer=true`);
+    window.open(
+      `${client_url}/call?room_id=${roomIdCall}&answer=true&audio=true&video=${isVideoCall}`
+    );
 
     setRinging(false);
   };
@@ -102,16 +105,18 @@ export default function Friend(props: {
 
   useEffect(() => {
     audioRef.current = new Audio("/RenaiCirculation.mp3");
-    socket.on("call", ({ signal_data, name_caller, image_caller, room_id }) => {
-      console.log("room id", room_id);
-
-      audioRef.current && audioRef.current.play();
-      setRinging(true);
-      setRoomIdCall(room_id);
-      setNameCaller(name_caller);
-      setImageCaller(image_caller);
-      localStorage.setItem("data", JSON.stringify(signal_data));
-    });
+    socket.on(
+      "call",
+      ({ signal_data, name_caller, image_caller, room_id, is_video }) => {
+        audioRef.current && audioRef.current.play();
+        setIsVideoCall(is_video);
+        setRinging(true);
+        setRoomIdCall(room_id);
+        setNameCaller(name_caller);
+        setImageCaller(image_caller);
+        localStorage.setItem("data", JSON.stringify(signal_data));
+      }
+    );
 
     socket.on("off call", () => {
       console.log("on off call");
@@ -157,7 +162,11 @@ export default function Friend(props: {
                 onClick={() => answer()}
                 className="rounded-full bg-green-400 p-3 cursor-pointer hover:bg-green-300"
               >
-                <FaPhone className="h-6 w-6" />
+                {isVideoCall ? (
+                  <FaVideo className="h-6 w-6" />
+                ) : (
+                  <FaPhone className="h-6 w-6" />
+                )}
               </div>
             </div>
           </div>
