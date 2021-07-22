@@ -31,6 +31,7 @@ export default function Friend(props: {
   const [imageCaller, setImageCaller] = useState("");
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
+  const client_url = process.env.NEXT_PUBLIC_CLIENT_URL;
   const audioRef = useRef<HTMLAudioElement>();
 
   const fetchRooms = async (user_id: string) => {
@@ -60,7 +61,7 @@ export default function Friend(props: {
     localStorage.setItem("img_talker", userProfile.img_url);
 
     audioRef.current && audioRef.current.pause();
-    window.open(`http://localhost:3000/call?room_id=${roomIdCall}&answer=true`);
+    window.open(`${client_url}/call?room_id=${roomIdCall}&answer=true`);
 
     setRinging(false);
   };

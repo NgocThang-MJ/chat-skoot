@@ -38,6 +38,7 @@ export default function Chat(props: {
   const chatBoxRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
+  const client_url = process.env.NEXT_PUBLIC_CLIENT_URL;
 
   const onChange = (e: FormEvent<HTMLInputElement>) => {
     const value = e.currentTarget.value;
@@ -143,7 +144,7 @@ export default function Chat(props: {
     localStorage.setItem("img_talker", conversation?.image as string);
 
     window.open(
-      `http://localhost:3000/call?room_id=${room?._id}&socket_id=${socket.id}`
+      `${client_url}/call?room_id=${room?._id}&socket_id=${socket.id}`
     );
 
     setRoomIdCall(room?._id);
