@@ -19,3 +19,7 @@ a {
 * {
   box-sizing: border-box;
 }
+
+.scroll-chat {
+  -webkit-overflow-scrolling: touch;
+}
