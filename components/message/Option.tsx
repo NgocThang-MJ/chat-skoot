@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { IoMdMenu, IoMdNotifications } from "react-icons/io";
+import { IoMdMenu, IoMdNotifications, IoMdArrowBack } from "react-icons/io";
 import { debounce } from "lodash";
 import axios from "axios";
 import { FiLogOut } from "react-icons/fi";
@@ -20,8 +20,10 @@ import {
 export default function Option(props: {
   userProfile: IUserProfile;
   setLoading: Function;
+  displayProfile: Boolean;
+  setDisplayProfile: Function;
 }) {
-  const userProfile = props.userProfile;
+  const { userProfile, displayProfile, setDisplayProfile } = props;
   const [input, setInput] = useState<String>("");
   const menuRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -118,7 +120,11 @@ export default function Option(props: {
   }, [menu, menuRef, notification, notificationRef]);
 
   return (
-    <div className="flex-shrink-0 w-80 px-2">
+    <div
+      className={`w-full h-full flex-shrink-0 px-2 transition-all duration-300 transform z-10 absolute bg-default ${
+        displayProfile ? "translate-x-0" : "translate-x-full"
+      } lg:w-80 lg:static lg:transform-none`}
+    >
       <div className="flex justify-between items-center">
         <div className="flex items-center">
           <div className="mr-2 h-8">
@@ -134,6 +140,13 @@ export default function Option(props: {
         </div>
         <div className="flex items-center relative">
           <div
+            onClick={() => setDisplayProfile(false)}
+            className="inline-block hover:bg-gray-700 transition rounded-full p-2 mr-2 lg:hidden"
+          >
+            <IoMdArrowBack className="h-6 w-6 text-white cursor-pointer" />
+          </div>
+
+          <div
             onClick={() => setNotification(!notification)}
             className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2 relative mr-2"
           >
@@ -148,7 +161,7 @@ export default function Option(props: {
           {notification && (
             <div
               ref={notificationRef}
-              className="absolute top-full bg-gray-900 p-3 rounded-md right-3/4 z-10 w-64"
+              className="absolute top-full bg-gray-900 p-3 rounded-md right-0 lg:right-3/4 z-10 w-64"
             >
               {requestUsers.length > 0 ? (
                 requestUsers.map((user) => (
@@ -179,6 +192,7 @@ export default function Option(props: {
               )}
             </div>
           )}
+
           <div
             onClick={toggleMenu}
             className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2"

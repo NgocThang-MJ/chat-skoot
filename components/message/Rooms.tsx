@@ -6,6 +6,7 @@ import useSWR from "swr";
 import TimeAgo from "timeago-react";
 import { GrClose } from "react-icons/gr";
 import { FaPhone, FaVideo } from "react-icons/fa";
+import { IoMdMenu } from "react-icons/io";
 
 import socket from "../../util/socket";
 
@@ -22,8 +23,16 @@ export default function Friend(props: {
   setRoomSocketId: Function;
   roomIdCall: string;
   setRoomIdCall: Function;
+  setDisplayProfile: Function;
+  setDisplayChat: Function;
 }) {
-  const { userProfile, roomIdCall, setRoomIdCall } = props;
+  const {
+    userProfile,
+    roomIdCall,
+    setRoomIdCall,
+    setDisplayProfile,
+    setDisplayChat,
+  } = props;
   const [rooms, setRooms] = useState<IRoom[]>([]);
   const [input, setInput] = useState("");
   const [ringing, setRinging] = useState(false);
@@ -46,6 +55,7 @@ export default function Friend(props: {
 
   const joinRoom = async (room: IRoom, talker: RoomMember) => {
     socket.emit("join conversation", room.room_socket_id);
+    setDisplayChat(true);
     props.setRoom(room);
     props.setRoomSocketId(room.room_socket_id);
     props.setConversation({
@@ -139,7 +149,7 @@ export default function Friend(props: {
   //   };
   // }, []);
   return (
-    <div className="w-64 flex-shrink-0 border-r border-gray-600 pr-5">
+    <div className="w-full bg-default flex-shrink-0 absolute lg:static lg:w-64 lg:border-r lg:border-gray-600 lg:pr-5">
       {ringing && (
         <div className="absolute w-screen h-screen z-30 top-0 right-0 bg-gray-700">
           <div className="mx-auto flex flex-col items-center justify-center h-2/3">
@@ -174,8 +184,19 @@ export default function Friend(props: {
         </div>
       )}
 
-      <div className="">
-        <p className="text-xl">Friends</p>
+      <div>
+        <div className="flex justify-between">
+          <p className="text-xl">Friends</p>
+          <div
+            onClick={() => {
+              console.log("toggle");
+              setDisplayProfile(true);
+            }}
+            className="rounded-full cursor-pointer hover:bg-gray-600 transition p-2 lg:hidden"
+          >
+            <IoMdMenu className="h-6 w-6" />
+          </div>
+        </div>
         <form
           className="flex bg-gray-600 rounded mt-3 items-center"
           onSubmit={(e: FormEvent<HTMLFormElement>) => e.preventDefault()}

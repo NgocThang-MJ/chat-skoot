@@ -1,6 +1,6 @@
 import { useState, FormEvent, useEffect, useRef, KeyboardEvent } from "react";
 import Image from "next/image";
-import { FaPhoneAlt, FaVideo } from "react-icons/fa";
+import { FaPhoneAlt, FaVideo, FaArrowLeft } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
 import { GrEmoji } from "react-icons/gr";
 import axios from "axios";
@@ -23,9 +23,18 @@ export default function Chat(props: {
   room: IRoom | undefined;
   roomSocketId: string;
   setRoomIdCall: Function;
+  displayChat: Boolean;
+  setDisplayChat: Function;
 }) {
-  const { conversation, room, userProfile, roomSocketId, setRoomIdCall } =
-    props;
+  const {
+    conversation,
+    room,
+    userProfile,
+    roomSocketId,
+    setRoomIdCall,
+    displayChat,
+    setDisplayChat,
+  } = props;
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
   // const [typingUser, setTypingUser] = useState<string[]>([]);
@@ -194,7 +203,11 @@ export default function Chat(props: {
   }, [showEmoji]);
 
   return (
-    <div className="flex-grow border-r border-gray-600 flex flex-col justify-between">
+    <div
+      className={`flex-grow bg-default border-l border-r z-10 border-gray-600 flex flex-col justify-between transition transform ${
+        displayChat ? "translate-x-0" : "-translate-x-full"
+      } lg:static lg:transform-none lg:border-l-0`}
+    >
       {conversation && (
         <>
           <div className="flex justify-between items-center border-b border-gray-700 pb-1 flex-shrink-0">
@@ -211,6 +224,10 @@ export default function Chat(props: {
               <p className="ml-3">{conversation.name}</p>
             </div>
             <div className="mr-2 flex">
+              <FaArrowLeft
+                onClick={() => setDisplayChat(false)}
+                className="h-5 w-5 text-red-500 mr-6 lg:hidden"
+              />
               <FaPhoneAlt
                 onClick={() => call({ video: false, audio: true })}
                 className="h-5 w-5 text-red-500 mr-6 cursor-pointer"
@@ -223,7 +240,7 @@ export default function Chat(props: {
           </div>
           <div
             ref={chatBoxRef}
-            className="flex flex-col-reverse flex-grow max-h-full overflow-y-auto px-4 py-2 transition-all"
+            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-y-auto px-4 py-2 transition-all"
           >
             {/* {room &&
               room?.members.map((member) => (

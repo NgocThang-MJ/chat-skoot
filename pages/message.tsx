@@ -32,6 +32,9 @@ export default function Home() {
     friends: [],
   });
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
+  // Responsive
+  const [displayProfile, setDisplayProfile] = useState(false);
+  const [displayChat, setDisplayChat] = useState(false);
 
   const fetcher = async (url: string, id: string) => {
     if (!id) return;
@@ -89,7 +92,7 @@ export default function Home() {
           <Head>
             <title>Chat Skoot</title>
           </Head>
-          <div className="flex mx-5 h-full text-white pt-4">
+          <div className="flex mx-8 h-full overflow-hidden relative text-white pt-6 lg:mx-5 lg:pt-4 lg:static">
             <Rooms
               userProfile={userProfile}
               setConversation={setConversation}
@@ -97,6 +100,8 @@ export default function Home() {
               setRoomSocketId={setRoomSocketId}
               roomIdCall={roomIdCall}
               setRoomIdCall={setRoomIdCall}
+              setDisplayProfile={setDisplayProfile}
+              setDisplayChat={setDisplayChat}
             />
 
             <Chat
@@ -105,9 +110,16 @@ export default function Home() {
               room={room}
               roomSocketId={roomSocketId}
               setRoomIdCall={setRoomIdCall}
+              displayChat={displayChat}
+              setDisplayChat={setDisplayChat}
             />
 
-            <Option userProfile={userProfile} setLoading={setLoading} />
+            <Option
+              userProfile={userProfile}
+              setLoading={setLoading}
+              displayProfile={displayProfile}
+              setDisplayProfile={setDisplayProfile}
+            />
           </div>
         </div>
       ) : (

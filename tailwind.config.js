@@ -8,6 +8,7 @@ module.exports = {
       },
       backgroundColor: {
         facebook: "#4268B3",
+        default: "#262c35",
       },
       maxWidth: {
         10: "2.5rem",
