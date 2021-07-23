@@ -240,7 +240,7 @@ export default function Chat(props: {
           </div>
           <div
             ref={chatBoxRef}
-            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-y-auto px-4 py-2 transition-all"
+            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-y-scroll lg:overflow-y-auto px-4 py-2 transition-all"
           >
             {/* {room &&
               room?.members.map((member) => (
