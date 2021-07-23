@@ -10,6 +10,7 @@ import {
   FaVideoSlash,
   FaVideo,
 } from "react-icons/fa";
+import adapter from "webrtc-adapter";
 
 import socket from "../util/socket";
 
@@ -89,6 +90,17 @@ export default function Call() {
     });
     const name_caller = localStorage.getItem("name_caller");
     const image_caller = localStorage.getItem("img_caller");
+
+    if (navigator.mediaDevices.getUserMedia === undefined) {
+      navigator.mediaDevices.getUserMedia = function (constraints: {}) {
+        const getUserMedia =
+          navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+        return new Promise(function (resolve, reject) {
+          getUserMedia.call(navigator, constraints, resolve, reject);
+        });
+      };
+    }
+
     navigator.mediaDevices
       .getUserMedia({
         video: video === "true",
