@@ -32,10 +32,10 @@ export default function Home() {
         <title>Chat Skoot</title>
       </Head>
       {!session && !loadingSession ? (
-        <div className="max-w-screen-2xl w-11/12 mx-auto flex flex-row justify-between items-start h-full mt-14">
-          <div>
+        <div className="max-w-screen-2xl w-5/6 mx-auto flex flex-col lg:flex-row lg:justify-between lg:items-start h-full mt-8 lg:mt-14 lg:w-11/12">
+          <div className="flex flex-col items-center lg:items-start">
             <p className="text-5xl text-red-500">Chat Skoot</p>
-            <p className="mt-2 text-gray-200">
+            <p className="mt-2 text-gray-200 text-center lg:text-left">
               Free message, voice call and video call, connect all people over
               the world!
             </p>
@@ -100,12 +100,12 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div>
+          <div className="mt-3 lg:mt-0">
             <img
               src="/landing.svg"
               alt="Landing Image"
-              width={580}
-              height={360}
+              width={540}
+              height={320}
             />
           </div>
         </div>
