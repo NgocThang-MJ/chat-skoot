@@ -154,7 +154,7 @@ export default function MyProfile() {
               </div>
             </a>
           </Link>
-          <div className="flex mb-5">
+          <div className="flex flex-col lg:flex-row mb-5">
             <div className="mr-10">
               <Image
                 src={userProfile.img_url}
@@ -164,13 +164,16 @@ export default function MyProfile() {
                 className="rounded-full"
               />
             </div>
-            <div className="mt-8">
-              <form onSubmit={changeUsername} className="flex items-center">
+            <div className="mt-4 lg:mt-8">
+              <form
+                onSubmit={changeUsername}
+                className="flex items-center w-full"
+              >
                 <input
                   type="text"
                   value={inputUsername}
                   onChange={onChangeUsername}
-                  className="text-white text-2xl bg-white bg-opacity-0 outline-none"
+                  className="text-white text-xl lg:text-2xl bg-white bg-opacity-0 outline-none"
                 />
                 {userProfile.username !== inputUsername && (
                   <button

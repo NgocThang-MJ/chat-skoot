@@ -204,7 +204,7 @@ export default function Chat(props: {
 
   return (
     <div
-      className={`flex-grow bg-default border-l border-r z-10 border-gray-600 flex flex-col justify-between transition transform ${
+      className={`flex-grow bg-default border-l border-r z-10 border-gray-600 flex flex-col justify-between transition transform duration-300 ${
         displayChat ? "translate-x-0" : "-translate-x-full"
       } lg:static lg:transform-none lg:border-l-0`}
     >
@@ -265,7 +265,7 @@ export default function Chat(props: {
                 <div
                   className={`flex ${
                     message.sender_id === userProfile.user_id &&
-                    "flex-row-reverse"
+                    "flex-row-reverse relative"
                   } mb-2 transition-all`}
                   key={uuidv4()}
                 >

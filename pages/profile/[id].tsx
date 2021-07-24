@@ -135,7 +135,7 @@ export default function Profile() {
               </div>
             </a>
           </Link>
-          <div className="flex mb-5">
+          <div className="flex flex-col lg:flex-row mb-5">
             <div className="mr-10">
               <Image
                 src={anotherProfile.img_url}
@@ -145,7 +145,7 @@ export default function Profile() {
                 className="rounded-full"
               />
             </div>
-            <div className="mt-8">
+            <div className="mt-4 lg:mt-8">
               <p className="text-white text-2xl">{anotherProfile.name}</p>
             </div>
           </div>
