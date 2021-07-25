@@ -21,10 +21,11 @@ a {
 }
 
 .scroll-chat {
-  -webkit-overflow-scrolling: touch;
+  touch-action: auto;
   -webkit-transform: translate3d(0, 0, 0);
 }
 
 .scroll-chat > * {
   -webkit-transform: translateZ(0px);
+  touch-action: auto;
 }
