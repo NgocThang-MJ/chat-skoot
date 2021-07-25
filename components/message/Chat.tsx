@@ -1,4 +1,11 @@
-import { useState, FormEvent, useEffect, useRef, KeyboardEvent } from "react";
+import {
+  useState,
+  FormEvent,
+  useEffect,
+  useRef,
+  KeyboardEvent,
+  useCallback,
+} from "react";
 import Image from "next/image";
 import { FaPhoneAlt, FaVideo, FaArrowLeft } from "react-icons/fa";
 import { IoMdSend } from "react-icons/io";
@@ -7,6 +14,7 @@ import axios from "axios";
 import "emoji-mart/css/emoji-mart.css";
 import { Picker } from "emoji-mart";
 import { v4 as uuidv4 } from "uuid";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 import socket from "../../util/socket";
 
@@ -37,11 +45,11 @@ export default function Chat(props: {
   } = props;
   const [text, setText] = useState("");
   const [showEmoji, setShowEmoji] = useState(false);
-  // const [typingUser, setTypingUser] = useState<string[]>([]);
-  // const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const [skip, setSkip] = useState(0);
   const [loadingMsg, setLoadingMsg] = useState(true);
   const chatBoxRef = useRef<HTMLDivElement>(null);
+  const observeRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiRef = useRef<HTMLDivElement>(null);
   const server_url = process.env.NEXT_PUBLIC_SERVER_URL;
@@ -68,16 +76,11 @@ export default function Chat(props: {
       room_id: room._id,
       room_socket_id: roomSocketId,
     });
-    // socket.emit("blur", {
-    //   room_socket_id: roomSocketId,
-    //   user_id: userProfile.user_id,
-    // });
     setMessages((oldMessages) => [
       { content: text, sender_id: userProfile.user_id },
       ...oldMessages,
     ]);
     setText("");
-    // setIsTyping(false);
     chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   };
 
@@ -87,61 +90,20 @@ export default function Chat(props: {
     }
   };
 
-  // const onBLur = () => {
-  //   socket.emit("blur", {
-  //     room_socket_id: roomSocketId,
-  //     user_id: userProfile.user_id,
-  //   });
-  //   setIsTyping(false);
-  // };
-
-  // const emitTyping = (
-  //   value: string,
-  //   isTyping: boolean,
-  //   room_socket_id: string
-  // ) => {
-  //   console.log(value);
-  //   console.log(!value);
-  //   if (!value) {
-  //     console.log("emit blur");
-  //     socket.emit("blur", {
-  //       room_socket_id,
-  //       user_id: userProfile.user_id,
-  //     });
-  //     setIsTyping(false);
-  //   } else {
-  //     if (!isTyping) {
-  //       setIsTyping(true);
-  //       console.log("emit typing");
-  //       socket.emit("typing", {
-  //         room_socket_id,
-  //         user_id: userProfile.user_id,
-  //       });
-  //       console.log("emitted typing");
-  //     }
-  //   }
-  // };
-
-  // const debouncedEmitTyping = useRef(
-  //   debounce(
-  //     (value, isTyping, room_socket_id) =>
-  //       emitTyping(value, isTyping, room_socket_id),
-  //     300
-  //   )
-  // ).current;
-
-  // const onKeyUp = (e: FormEvent<HTMLInputElement>) => {
-  //   const value = e.currentTarget.value;
-  //   console.log(value);
-  //   debouncedEmitTyping(value, isTyping, roomSocketId);
-  // };
-
-  const fetchMessages = async (room_id: string) => {
+  const fetchMessages = async (room_id: string, skip: number) => {
     const response = await axios.get(
-      `${server_url}/api/rooms/messages/${room_id}`
+      `${server_url}/api/rooms/messages/${room_id}/${skip}`
     );
     return response.data;
   };
+
+  // const fetchMoreMsgs = async () => {
+  //   if (!room?._id) return;
+  //   setSkip(skip => skip + 1);
+  //   fetchMessages(room?._id).then((data) => {
+  //     setMessages([...messages, ...data]);
+  //   })
+  // }
 
   // Call
   const call = (option: { video: boolean; audio: boolean }) => {
@@ -159,19 +121,6 @@ export default function Chat(props: {
     setRoomIdCall(room?._id);
   };
 
-  // Effect
-
-  // useEffect(() => {
-  //   socket.on("typing", ({ user_id }) => {
-  //     console.log(user_id + "typing");
-  //     setTypingUser(typingUser.concat([user_id]));
-  //   });
-  //   socket.on("blur", ({ user_id }) => {
-  //     setIsTyping(false);
-  //     setTypingUser(typingUser.filter((id) => id !== user_id));
-  //   });
-  // }, [typingUser, isTyping]);
-
   useEffect(() => {
     socket.on("message", ({ content, sender_id }) => {
       setMessages([{ content, sender_id }, ...messages]);
@@ -181,12 +130,57 @@ export default function Chat(props: {
   useEffect(() => {
     if (!room) return;
     setLoadingMsg(true);
-    fetchMessages(room._id).then((data) => {
+    fetchMessages(room._id, skip).then((data) => {
       setMessages(data);
+      chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
       setLoadingMsg(false);
     });
-    chatBoxRef.current?.scroll(0, chatBoxRef.current.scrollHeight);
   }, [room]);
+
+  // useEffect(() => {
+  //   setElement(observeRef.current);
+  // }, [observeRef]);
+
+  // const obsCallback = useCallback(
+  //   (entries: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+  //     const [entry] = entries;
+  //     console.log("intersect");
+  //     if (!entry.isIntersecting || !room?._id) return;
+
+  //     setSkip((skip) => skip + 1);
+  //     console.log("run", skip);
+
+  //     // fetchMessages(room._id).then((data) => {
+  //     //   console.log([...messages, ...data]);
+  //     //   setMessages((oldMessages) => [...oldMessages, ...data]);
+  //     // });
+  //   },
+  //   [room?._id, skip]
+  // );
+
+  // useEffect(() => {
+  //   setSkip(0);
+  // }, [room?._id]);
+
+  // Observer
+  // useEffect(() => {
+  //   console.log("re-run");
+  //   // Observer Callback
+  //   if (!chatBoxRef.current || !observeRef.current) return;
+  //   console.log("pass");
+  //   const observer = new IntersectionObserver(obsCallback, {
+  //     root: chatBoxRef.current,
+  //     rootMargin: "100px",
+  //     threshold: 0,
+  //   });
+  //   observer.observe(observeRef.current);
+
+  //   return () => {
+  //     observeRef.current && observer.unobserve(observeRef.current);
+  //   };
+  // }, [roomSocketId, chatBoxRef, conversation, observeRef]);
+
+  // get reference of oldest msg
 
   // Event click outside
   useEffect(() => {
@@ -204,7 +198,7 @@ export default function Chat(props: {
 
   return (
     <div
-      className={`flex-grow bg-default border-l border-r z-10 border-gray-600 flex flex-col justify-between transition transform duration-300 ${
+      className={`flex-grow bg-default border-l border-r z-40 border-gray-600 flex flex-col justify-between transition transform duration-300 ${
         displayChat ? "translate-x-0" : "-translate-x-full"
       } lg:static lg:transform-none lg:border-l-0`}
     >
@@ -240,32 +234,21 @@ export default function Chat(props: {
           </div>
           <div
             ref={chatBoxRef}
-            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-y-scroll lg:overflow-y-auto px-4 py-2 transition-all scroll-chat relative"
+            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-scroll lg:overflow-auto lg:overflow-y-auto px-4 py-2 transition-all scroll-chat relative"
           >
-            {/* {room &&
-              room?.members.map((member) => (
-                <div
-                  className={`flex items-center ${
-                    typingUser.includes(member.id) ? "block" : "hidden"
-                  }`}
-                  key={member.id}
-                >
-                  <Image
-                    src={member.image || `${process.env.NEXT_PUBLIC_USER_IMG}`}
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                  <p className="ml-2 text-gray-500">is typing...</p>
-                </div>
-              ))} */}
+            {/* <InfiniteScroll
+              dataLength={messages.length}
+              next={fetchMoreMsgs}
+              
+            > */}
             {!loadingMsg &&
               messages.length > 0 &&
               messages.map((message) => (
                 <div
                   className={`flex ${
-                    message.sender_id === userProfile.user_id &&
-                    "flex-row-reverse relative"
+                    message.sender_id === userProfile.user_id
+                      ? "flex-row-reverse relative"
+                      : null
                   } mb-2 transition-all`}
                   key={uuidv4()}
                 >
@@ -280,6 +263,8 @@ export default function Chat(props: {
                   </p>
                 </div>
               ))}
+            {/* </InfiniteScroll> */}
+            <div ref={observeRef}></div>
           </div>
           <div className="w-full mb-3 flex-shrink-0">
             <form className="flex rounded-lg items-center mx-3">
@@ -287,8 +272,6 @@ export default function Chat(props: {
                 placeholder="Search"
                 className="text-gray-200 bg-gray-600 w-11/12 py-2 px-2 mr-2 rounded-lg outline-none border-none"
                 onChange={onChange}
-                // onBlur={onBLur}
-                // onKeyUp={onKeyUp}
                 onKeyDown={onKeyDown}
                 value={text}
                 ref={inputRef}
@@ -303,7 +286,7 @@ export default function Chat(props: {
                 <div
                   className={`${
                     !showEmoji && "hidden"
-                  } absolute bottom-10 -left-full z-20`}
+                  } absolute bottom-10 -right-14 lg:-left-full`}
                   ref={emojiRef}
                 >
                   <Picker
@@ -311,6 +294,7 @@ export default function Chat(props: {
                     theme="dark"
                     title="Chat Skoot"
                     emoji="speech_balloon"
+                    perLine={8}
                   />
                 </div>
               </div>
