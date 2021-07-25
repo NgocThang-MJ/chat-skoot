@@ -234,7 +234,7 @@ export default function Chat(props: {
           </div>
           <div
             ref={chatBoxRef}
-            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-scroll lg:overflow-auto lg:overflow-y-auto px-4 py-2 transition-all scroll-chat relative"
+            className="flex flex-col-reverse flex-grow h-72 max-h-full overflow-scroll lg:overflow-auto lg:overflow-y-auto px-4 py-2 transition-all scroll-chat"
           >
             {/* <InfiniteScroll
               dataLength={messages.length}
@@ -247,7 +247,7 @@ export default function Chat(props: {
                 <div
                   className={`flex ${
                     message.sender_id === userProfile.user_id
-                      ? "flex-row-reverse relative"
+                      ? "flex-row-reverse"
                       : null
                   } mb-2 transition-all`}
                   key={uuidv4()}
