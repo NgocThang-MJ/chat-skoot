@@ -9,6 +9,11 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
   background-color: #262c35;
+  overflow: hidden !important;
+}
+
+html {
+  touch-action: none;
 }
 
 a {
@@ -21,11 +26,10 @@ a {
 }
 
 .scroll-chat {
-  touch-action: auto;
+  touch-action: pan-y;
   -webkit-transform: translate3d(0, 0, 0);
 }
 
 .scroll-chat > * {
   -webkit-transform: translateZ(0px);
-  touch-action: auto;
 }
