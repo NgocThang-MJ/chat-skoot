@@ -151,7 +151,7 @@ export default function Friend(props: {
   return (
     <div className="w-full bg-default flex-shrink-0 absolute lg:static lg:w-64 lg:border-r lg:border-gray-600 lg:pr-5">
       {ringing && (
-        <div className="absolute w-screen h-screen z-30 top-0 right-0 bg-gray-700">
+        <div className="absolute w-screen h-screen z-50 top-0 right-0 bg-gray-700">
           <div className="mx-auto flex flex-col items-center justify-center h-2/3">
             <Image
               src={imageCaller || `${process.env.NEXT_PUBLIC_USER_IMG}`}
